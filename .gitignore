@@ -55,6 +55,7 @@ Mkfile.old
 dkms.conf
 
 # uVision generated files
+/Local_test
 /*/MDK-ARM/DebugConfig/
 *.uvopt
 *.uvguix.*
