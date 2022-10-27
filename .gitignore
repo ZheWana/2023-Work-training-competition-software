@@ -82,5 +82,7 @@ dkms.conf
 JLink*.txt
 
 # project private
+/.vscode
+
 !/*/MDK-ARM/StepDriver/*.sct
 /Local_test
