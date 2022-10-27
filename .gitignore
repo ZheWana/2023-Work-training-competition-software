@@ -55,10 +55,11 @@ Mkfile.old
 dkms.conf
 
 # uVision generated files
-/Local_test
 /*/MDK-ARM/DebugConfig/
 *.uvopt
 *.uvguix.*
+*.scvd
+*.iex
 
 *.plg
 *.map
@@ -70,7 +71,6 @@ dkms.conf
 *.crf
 *.bak
 
-
 *.axf
 *.S19
 *.bin
@@ -80,3 +80,7 @@ dkms.conf
 
 # Debugger generated files
 JLink*.txt
+
+# project private
+!/*/MDK-ARM/StepDriver/*.sct
+/Local_test
