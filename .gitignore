@@ -79,4 +79,4 @@ dkms.conf
 *.FLM
 
 # Debugger generated files
-JlinkLog.txt
+JLink*.txt
