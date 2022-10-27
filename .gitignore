@@ -56,7 +56,7 @@ dkms.conf
 
 # uVision generated files
 /*/MDK-ARM/DebugConfig/
-*.uvopt
+*.uvoptx
 *.uvguix.*
 *.scvd
 *.iex
