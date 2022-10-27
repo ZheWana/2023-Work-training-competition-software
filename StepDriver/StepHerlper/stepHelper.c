@@ -90,7 +90,7 @@ int Step_FillAccelerate(stepTypedef* hstep)
             hstep->Fcur = hstep->Fmin;
             break;
         }
-
+ 
         // get PSC & fill
         buffPtr[i] = (uint16_t)((RCC_MAX_FREQUENCY / (hstep->phtim->Instance->ARR + 1)) / hstep->Fcur - 1);
     }

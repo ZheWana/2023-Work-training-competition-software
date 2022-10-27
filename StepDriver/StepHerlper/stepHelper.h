@@ -10,10 +10,9 @@
  */
 #ifndef STEPHELPER_H
 #define STEPHELPER_H
+#include "printf.h"
 #include "stdint.h"
 #include "tim.h"
-#include "printf.h"
-
 
 // predefinations
 
@@ -89,6 +88,8 @@ uint32_t Step_BuffUsedLength(stepTypedef* hstep);
 int Step_Lock(stepTypedef* hstep);
 
 int Step_Unlock(stepTypedef* hstep);
+
+void Step_Abort(stepTypedef* hstep);
 
 int Step_Prefill(stepTypedef* hstep, int stepToGo, uint8_t useDec);
 
