@@ -107,10 +107,17 @@ void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef* hspi)
         uint8_t motorID = Buff[2];
 
         // Get Instruction
-        uint32_t instruction = Buff[1];
+        uint8_t instruction = Buff[1];
 
         switch (instruction) {
         case 0x00: // Reset
+            HAL_SPI_DMAStop(&hspi1);
+
+            for (int i = 0; i < 5; i++) {
+                Step_Init(&steplist[i], steplist[i].phtim, steplist[i].channel, 100, 7000, 5000);
+            }
+
+            HAL_SPI_Receive_DMA(&hspi1, Buff, 16);
             break;
         case 0x01: // Init
             // get parameter
@@ -132,6 +139,7 @@ void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef* hspi)
             HAL_TIM_PWM_PulseFinishedCallback(steplist[motorID].phtim);
             break;
         case 0x03: // Abort
+            Step_Abort(&steplist[motorID]);
             break;
 
         default:
@@ -146,12 +154,12 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef* htim)
         if (htim == steplist[i].phtim) {
 
             if (Step_IsBuffRdy(&steplist[i])) {
-                HAL_TIM_PWM_Start_DMA(steplist[i].phtim, TIM_CHANNEL_1,
+                HAL_TIM_PWM_Start_DMA(steplist[i].phtim, steplist[i].channel,
                     (uint32_t*)Step_GetCurBuffer(&steplist[i]),
                     (uint16_t)Step_BuffUsedLength(&steplist[i]));
                 Step_BufferUsed(&steplist[i]);
             } else if (steplist[i].state == Stop) {
-                HAL_TIM_PWM_Stop_DMA(steplist[i].phtim, TIM_CHANNEL_1);
+                HAL_TIM_PWM_Stop_DMA(steplist[i].phtim, steplist[i].channel);
                 Step_Unlock(&steplist[i]);
             }
 
@@ -164,6 +172,12 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef* htim)
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+// Command List (16-bytes):
+// Reset : byte0-0x55; byte1-Instruction(0x00); byte2-motorID; byte3:14-Reserved;                                                             byte15-0xAA;
+// Init  : byte0-0x55; byte1-Instruction(0x01); byte2-motorID; byte3:6-StartSpeed(Hz); byte7:10-FinalSpeed(Hz); byte11:14-AccelerateTime(ms); byte15-0xAA;
+// Driver: byte0-0x55; byte1-Instruction(0x02); byte2-motorID; byte3:6-StepNumber(Hz); byte7-Direction; byte8-UseDecelerate;                  byte15-0xAA;
+// Abort : byte0-0x55; byte1-Instruction(0x03); byte2-motorID; byte3:14-Reserved;                                                             byte15-0xAA;
 
 /* USER CODE END 0 */
 

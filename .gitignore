@@ -55,10 +55,11 @@ Mkfile.old
 dkms.conf
 
 # uVision generated files
-/Local_test
 /*/MDK-ARM/DebugConfig/
-*.uvopt
+*.uvoptx
 *.uvguix.*
+*.scvd
+*.iex
 
 *.plg
 *.map
@@ -70,10 +71,20 @@ dkms.conf
 *.crf
 *.bak
 
-
 *.axf
 *.S19
 *.bin
 *.hex
 *.dep
 *.FLM
+
+# Debugger generated files
+JLink*.txt
+
+# project private
+/.vscode
+
+!/*/MDK-ARM/StepDriver/*.sct
+/Local_test
+/**/*build*debug
+/**/.idea
