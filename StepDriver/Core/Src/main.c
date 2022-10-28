@@ -173,6 +173,12 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef* htim)
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+// Command List (16-bytes):
+// Reset : byte0-0x55; byte1-Instruction(0x00); byte2-motorID; byte3:14-Reserved;                                                             byte15-0xAA;
+// Init  : byte0-0x55; byte1-Instruction(0x01); byte2-motorID; byte3:6-StartSpeed(Hz); byte7:10-FinalSpeed(Hz); byte11:14-AccelerateTime(ms); byte15-0xAA;
+// Driver: byte0-0x55; byte1-Instruction(0x02); byte2-motorID; byte3:6-StepNumber(Hz); byte7-Direction; byte8-UseDecelerate;                  byte15-0xAA;
+// Abort : byte0-0x55; byte1-Instruction(0x03); byte2-motorID; byte3:14-Reserved;                                                             byte15-0xAA;
+
 /* USER CODE END 0 */
 
 /**
