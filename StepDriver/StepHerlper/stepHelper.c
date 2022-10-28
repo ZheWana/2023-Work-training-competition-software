@@ -30,6 +30,8 @@ void Step_Init(stepTypedef* hstep, TIM_HandleTypeDef* phtim, uint32_t channel, f
     hstep->phtim = phtim;
     hstep->channel = channel;
 
+    hstep->phtim->Instance->CCR1 = 0.5f * hstep->phtim->Instance->ARR;
+
     hstep->Fmin = Fmin;
     hstep->Fmax = Fmax;
     hstep->Tacc = Tacc;
@@ -74,8 +76,7 @@ int Step_FillAccelerate(stepTypedef* hstep)
         // get t
         // hstep->t += 1000.0f / hstep->Fcur;
         hstep->t++;
-        printf("%f\n",hstep->Fcur);
-
+        printf("%f\n", hstep->Fcur);
 
         // get freq
         switch (AcclerateCurve) {
@@ -90,7 +91,7 @@ int Step_FillAccelerate(stepTypedef* hstep)
             hstep->Fcur = hstep->Fmin;
             break;
         }
- 
+
         // get PSC & fill
         buffPtr[i] = (uint16_t)((RCC_MAX_FREQUENCY / (hstep->phtim->Instance->ARR + 1)) / hstep->Fcur - 1);
     }
@@ -293,7 +294,7 @@ int Step_Unlock(stepTypedef* hstep)
  */
 void Step_Abort(stepTypedef* hstep)
 {
-    HAL_TIM_PWM_Stop_DMA(hstep->phtim, TIM_CHANNEL_1);
+    HAL_TIM_PWM_Stop_DMA(hstep->phtim, hstep->channel);
     Step_Unlock(hstep);
 }
 
