@@ -57,6 +57,24 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define SPI4_NSS_Pin GPIO_PIN_4
+#define SPI4_NSS_GPIO_Port GPIOE
+#define LD_Pin GPIO_PIN_13
+#define LD_GPIO_Port GPIOC
+#define SER_Pin GPIO_PIN_14
+#define SER_GPIO_Port GPIOC
+#define CLK_Pin GPIO_PIN_15
+#define CLK_GPIO_Port GPIOC
+#define SPI1_NSS_Pin GPIO_PIN_4
+#define SPI1_NSS_GPIO_Port GPIOA
+#define ST7735_RES_Pin GPIO_PIN_0
+#define ST7735_RES_GPIO_Port GPIOD
+#define ST7735_DC_Pin GPIO_PIN_1
+#define ST7735_DC_GPIO_Port GPIOD
+#define ST7735_CS_Pin GPIO_PIN_2
+#define ST7735_CS_GPIO_Port GPIOD
+#define ST7735_BLK_Pin GPIO_PIN_3
+#define ST7735_BLK_GPIO_Port GPIOD
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
