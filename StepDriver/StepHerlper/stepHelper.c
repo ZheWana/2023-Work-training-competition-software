@@ -25,10 +25,13 @@
  * @param Fmax 加速最大频率
  * @param Tacc 加速时间
  */
-void Step_Init(stepTypedef* hstep, TIM_HandleTypeDef* phtim, uint32_t channel, float Fmin, float Fmax, float Tacc)
+void Step_Init(stepTypedef* hstep, TIM_HandleTypeDef* phtim, uint32_t channel, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, float Fmin, float Fmax, float Tacc)
 {
     hstep->phtim = phtim;
     hstep->channel = channel;
+
+    hstep->gpioPort = GPIOx;
+    hstep->gpioPin = GPIO_Pin;
 
     hstep->phtim->Instance->CCR1 = 0.5f * hstep->phtim->Instance->ARR;
 
@@ -304,7 +307,7 @@ void Step_Abort(stepTypedef* hstep)
  * @param hstep step句柄
  * @param stepToGo 待运行步数
  */
-int Step_Prefill(stepTypedef* hstep, int stepToGo, uint8_t useDec)
+int Step_Prefill(stepTypedef* hstep, int stepToGo, uint8_t dir, uint8_t useDec)
 {
     // Lock while running.
     if (hstep->lock == UNLOCK) {
@@ -318,6 +321,8 @@ int Step_Prefill(stepTypedef* hstep, int stepToGo, uint8_t useDec)
 
     hstep->accStep = (hstep->Fmin + hstep->Fmax) * hstep->Tacc / 2000;
     hstep->buffToUse = 0;
+
+    HAL_GPIO_WritePin(hstep->gpioPort, hstep->gpioPin, dir);
 
     if (hstep->accStep > stepToGo) { // 加速步数不足
         hstep->Fcur = hstep->Fmin;

@@ -39,6 +39,9 @@ typedef struct stepTypedef {
     TIM_HandleTypeDef* phtim;
     uint32_t channel;
 
+    GPIO_TypeDef* gpioPort;
+    uint16_t gpioPin;
+
     // Const
     float Fmin; // Hz
     float Fmax; // Hz
@@ -75,7 +78,7 @@ typedef struct stepTypedef {
     uint8_t buffRdy : 1; // ----------------------internal use
 } stepTypedef;
 
-void Step_Init(stepTypedef* hstep, TIM_HandleTypeDef* phtim, uint32_t channel, float Fmin, float Fmax, float Tacc);
+void Step_Init(stepTypedef* hstep, TIM_HandleTypeDef* phtim, uint32_t channel, GPIO_TypeDef* GPIOx, uint16_t GPIO_Pin, float Fmin, float Fmax, float Tacc);
 
 void Step_BufferUsed(stepTypedef* hstep);
 
@@ -91,7 +94,7 @@ int Step_Unlock(stepTypedef* hstep);
 
 void Step_Abort(stepTypedef* hstep);
 
-int Step_Prefill(stepTypedef* hstep, int stepToGo, uint8_t useDec);
+int Step_Prefill(stepTypedef* hstep, int stepToGo, uint8_t dir, uint8_t useDec);
 
 int Step_BuffFill(stepTypedef* hstep);
 
