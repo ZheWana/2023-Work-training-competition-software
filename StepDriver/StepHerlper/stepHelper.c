@@ -322,7 +322,7 @@ int Step_Prefill(stepTypedef* hstep, int stepToGo, uint8_t dir, uint8_t useDec)
         hstep->accStep = (hstep->Fmin + hstep->Fmax) * hstep->Tacc / 2000;
         break;
     case Curve_S:
-        hstep->accStep = 0.5f * hstep->Fmax * hstep->Tacc + hstep->Fmin * hstep->Tacc;
+        hstep->accStep = 0.5f * hstep->Fmax * hstep->Tacc * 0.001f + hstep->Fmin * hstep->Tacc * 0.001f;
         break;
     }
 
