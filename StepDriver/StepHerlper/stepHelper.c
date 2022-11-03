@@ -77,9 +77,7 @@ int Step_FillAccelerate(stepTypedef* hstep)
             break;
 
         // get t
-        // hstep->t += 1000.0f / hstep->Fcur;
-        hstep->t++;
-        printf("%f\n", hstep->Fcur);
+        hstep->t += 1000.0f / hstep->Fcur;
 
         // get freq
         switch (AcclerateCurve) {
@@ -87,7 +85,7 @@ int Step_FillAccelerate(stepTypedef* hstep)
             hstep->Fcur = (hstep->Fmax - hstep->Fmin) * 1.0f / (hstep->Tacc) * (hstep->t) + hstep->Fmin;
             break;
         case Curve_S:
-            hstep->Fcur = 0.5f * hstep->Fmax * cosf(2 * M_PI - 2 * M_PI * hstep->t / hstep->Tacc) + hstep->Fmin + hstep->Fmax * 0.5f;
+            hstep->Fcur = 0.5f * hstep->Fmax * cosf(M_PI - M_PI * hstep->t / hstep->Tacc) + hstep->Fmin + hstep->Fmax * 0.5f;
             break;
 
         default:
@@ -319,7 +317,15 @@ int Step_Prefill(stepTypedef* hstep, int stepToGo, uint8_t dir, uint8_t useDec)
     hstep->stepToGo = stepToGo;
     hstep->useDec = useDec;
 
-    hstep->accStep = (hstep->Fmin + hstep->Fmax) * hstep->Tacc / 2000;
+    switch (AcclerateCurve) {
+    case Curve_Trapezoidal:
+        hstep->accStep = (hstep->Fmin + hstep->Fmax) * hstep->Tacc / 2000;
+        break;
+    case Curve_S:
+        hstep->accStep = 0.5f * hstep->Fmax * hstep->Tacc + hstep->Fmin * hstep->Tacc;
+        break;
+    }
+
     hstep->buffToUse = 0;
 
     HAL_GPIO_WritePin(hstep->gpioPort, hstep->gpioPin, dir);
