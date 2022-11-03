@@ -340,7 +340,7 @@
               <MiscControls></MiscControls>
               <Define>USE_HAL_DRIVER,STM32F401xC</Define>
               <Undefine></Undefine>
-              <IncludePath>../Core/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32F4xx/Include;../Drivers/CMSIS/Include;..\StepHerlper</IncludePath>
+              <IncludePath>../Core/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc;../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy;../Drivers/CMSIS/Device/ST/STM32F4xx/Include;../Drivers/CMSIS/Include;../StepHerlper</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -395,6 +395,11 @@
           <GroupName>Application/User/Core</GroupName>
           <Files>
             <File>
+              <FileName>printf.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Core\Src\printf.c</FilePath>
+            </File>
+            <File>
               <FileName>main.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Core/Src/main.c</FilePath>
@@ -433,16 +438,6 @@
               <FileName>stm32f4xx_hal_msp.c</FileName>
               <FileType>1</FileType>
               <FilePath>../Core/Src/stm32f4xx_hal_msp.c</FilePath>
-            </File>
-            <File>
-              <FileName>stm32f4xx_hal_timebase_tim.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>../Core/Src/stm32f4xx_hal_timebase_tim.c</FilePath>
-            </File>
-            <File>
-              <FileName>printf.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Core\Src\printf.c</FilePath>
             </File>
           </Files>
         </Group>
