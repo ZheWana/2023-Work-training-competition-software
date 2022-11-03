@@ -282,8 +282,8 @@
         "bin": "",
         "baseAddr": "",
         "cpuInfo": {
-          "vendor": "null",
-          "cpuName": "null"
+          "vendor": "ST",
+          "cpuName": "STM32F401CC"
         },
         "proType": 1,
         "speed": 8000,
