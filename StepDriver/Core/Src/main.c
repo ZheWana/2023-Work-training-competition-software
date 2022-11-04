@@ -114,7 +114,7 @@ void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef* hspi)
             HAL_SPI_DMAStop(&hspi1);
 
             for (int i = 0; i < 5; i++) {
-                Step_Init(&steplist[i], steplist[i].phtim, steplist[i].channel, 100, 7000, 5000);
+                Step_Init(&steplist[i], steplist[i].phtim, steplist[i].channel, steplist[i].gpioPort, steplist[i].gpioPin, 100, 7000, 5000);
             }
 
             HAL_SPI_Receive_DMA(&hspi1, Buff, 16);
@@ -126,7 +126,7 @@ void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef* hspi)
             accTime = *(uint32_t*)&Buff[11];
 
             // init
-            Step_Init(&steplist[motorID], steplist[motorID].phtim, steplist[motorID].channel, startSpd, finalSpd, accTime);
+            Step_Init(&steplist[motorID], steplist[motorID].phtim, steplist[motorID].channel, steplist[motorID].gpioPort, steplist[motorID].gpioPin, startSpd, finalSpd, accTime);
             break;
         case 0x02: // Drive
             // get parameter
@@ -135,7 +135,7 @@ void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef* hspi)
             useDec = Buff[8];
 
             // init
-            Step_Prefill(&steplist[motorID], StepNum, Decelerate_USE);
+            Step_Prefill(&steplist[motorID], dir, StepNum, Decelerate_USE);
             HAL_TIM_PWM_PulseFinishedCallback(steplist[motorID].phtim);
             break;
         case 0x03: // Abort
@@ -154,9 +154,8 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef* htim)
         if (htim == steplist[i].phtim) {
 
             if (Step_IsBuffRdy(&steplist[i])) {
-                HAL_TIM_PWM_Start_DMA(steplist[i].phtim, steplist[i].channel,
-                    (uint32_t*)Step_GetCurBuffer(&steplist[i]),
-                    (uint16_t)Step_BuffUsedLength(&steplist[i]));
+                while (HAL_OK != HAL_TIM_PWM_Start_DMA(steplist[i].phtim, steplist[i].channel, (uint32_t*)Step_GetCurBuffer(&steplist[i]), (uint16_t)Step_BuffUsedLength(&steplist[i])))
+                    ;
                 Step_BufferUsed(&steplist[i]);
             } else if (steplist[i].state == Stop) {
                 HAL_TIM_PWM_Stop_DMA(steplist[i].phtim, steplist[i].channel);
@@ -174,10 +173,10 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef* htim)
 /* USER CODE BEGIN 0 */
 
 // Command List (16-bytes):
-// Reset : byte0-0x55; byte1-Instruction(0x00); byte2-motorID; byte3:14-Reserved;                                                             byte15-0xAA;
+// Reset : byte0-0x55; byte1-Instruction(0x00); byte2-motorID;                               byte3:14-Reserved;                               byte15-0xAA;
 // Init  : byte0-0x55; byte1-Instruction(0x01); byte2-motorID; byte3:6-StartSpeed(Hz); byte7:10-FinalSpeed(Hz); byte11:14-AccelerateTime(ms); byte15-0xAA;
 // Driver: byte0-0x55; byte1-Instruction(0x02); byte2-motorID; byte3:6-StepNumber(Hz); byte7-Direction; byte8-UseDecelerate;                  byte15-0xAA;
-// Abort : byte0-0x55; byte1-Instruction(0x03); byte2-motorID; byte3:14-Reserved;                                                             byte15-0xAA;
+// Abort : byte0-0x55; byte1-Instruction(0x03); byte2-motorID;                               byte3:14-Reserved;                               byte15-0xAA;
 
 /* USER CODE END 0 */
 
@@ -218,13 +217,16 @@ int main(void)
   MX_TIM2_Init();
   MX_TIM5_Init();
   /* USER CODE BEGIN 2 */
-    Step_Init(&steplist[0], &htim1, TIM_CHANNEL_1, 100, 7000, 5000);
-    Step_Init(&steplist[1], &htim2, TIM_CHANNEL_1, 100, 7000, 5000);
-    Step_Init(&steplist[2], &htim3, TIM_CHANNEL_1, 100, 7000, 5000);
-    Step_Init(&steplist[3], &htim4, TIM_CHANNEL_1, 100, 7000, 5000);
-    Step_Init(&steplist[4], &htim5, TIM_CHANNEL_1, 100, 7000, 5000);
+    Step_Init(&steplist[0], &htim1, TIM_CHANNEL_4, DIR0_GPIO_Port, DIR0_Pin, 50, 1000, 1000);
+    Step_Init(&steplist[1], &htim2, TIM_CHANNEL_1, DIR1_GPIO_Port, DIR1_Pin, 50, 5000, 5000);
+    Step_Init(&steplist[2], &htim3, TIM_CHANNEL_1, DIR2_GPIO_Port, DIR2_Pin, 50, 1000, 1000);
+    Step_Init(&steplist[3], &htim4, TIM_CHANNEL_1, DIR3_GPIO_Port, DIR3_Pin, 50, 1000, 1000);
+    Step_Init(&steplist[4], &htim5, TIM_CHANNEL_1, DIR4_GPIO_Port, DIR4_Pin, 50, 1000, 1000);
 
     HAL_SPI_Receive_DMA(&hspi1, Buff, 16);
+
+    Step_Prefill(&steplist[1], 1000000, 1, Decelerate_USE);
+    HAL_TIM_PWM_PulseFinishedCallback(steplist[1].phtim);
 
   /* USER CODE END 2 */
 
@@ -289,27 +291,6 @@ void SystemClock_Config(void)
 /* USER CODE BEGIN 4 */
 
 /* USER CODE END 4 */
-
-/**
-  * @brief  Period elapsed callback in non blocking mode
-  * @note   This function is called  when TIM10 interrupt took place, inside
-  * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
-  * a global variable "uwTick" used as application time base.
-  * @param  htim : TIM handle
-  * @retval None
-  */
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
-{
-  /* USER CODE BEGIN Callback 0 */
-
-  /* USER CODE END Callback 0 */
-  if (htim->Instance == TIM10) {
-    HAL_IncTick();
-  }
-  /* USER CODE BEGIN Callback 1 */
-
-  /* USER CODE END Callback 1 */
-}
 
 /**
   * @brief  This function is executed in case of error occurrence.
