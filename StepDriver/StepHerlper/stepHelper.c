@@ -330,7 +330,11 @@ int Step_Prefill(stepTypedef* hstep, int stepToGo, uint8_t dir, uint8_t useDec)
 
     HAL_GPIO_WritePin(hstep->gpioPort, hstep->gpioPin, dir);
 
-    if (hstep->accStep > stepToGo) { // 加速步数不足
+    if (hstep->Tacc == 0) { // 加速时间为0
+        hstep->Fcur = hstep->Fmax;
+        hstep->state = Constant;
+        hstep->buffToUse = Step_FillConstant(hstep);
+    } else if (hstep->accStep > stepToGo) { // 加速步数不足
         hstep->Fcur = hstep->Fmin;
         hstep->state = Constant;
         hstep->buffToUse = Step_FillConstant(hstep);
