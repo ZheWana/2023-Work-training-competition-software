@@ -222,12 +222,6 @@ int main(void)
     Step_Init(&steplist[2], &htim3, TIM_CHANNEL_1, DIR2_GPIO_Port, DIR2_Pin, 50, 1000, 1000);
     Step_Init(&steplist[3], &htim4, TIM_CHANNEL_1, DIR3_GPIO_Port, DIR3_Pin, 50, 1000, 1000);
     Step_Init(&steplist[4], &htim5, TIM_CHANNEL_1, DIR4_GPIO_Port, DIR4_Pin, 50, 1000, 1000);
-
-    HAL_SPI_Receive_DMA(&hspi1, Buff, 16);
-
-    Step_Prefill(&steplist[1], 1000000, 1, Decelerate_USE);
-    HAL_TIM_PWM_PulseFinishedCallback(steplist[1].phtim);
-
     /* USER CODE END 2 */
 
     /* Infinite loop */
