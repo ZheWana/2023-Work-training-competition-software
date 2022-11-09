@@ -60,7 +60,12 @@ void PeriphCommonClock_Config(void);
 static void MPU_Config(void);
 
 void MX_FREERTOS_Init(void);
+
 /* USER CODE BEGIN PFP */
+int __io_putchar(int ch) {
+    HAL_StatusTypeDef res = HAL_UART_Transmit(&huart4, (uint8_t *) &ch, 1, HAL_MAX_DELAY);
+    return (int) res;
+}
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
