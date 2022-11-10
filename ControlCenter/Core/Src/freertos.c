@@ -29,6 +29,8 @@
 #include "usart.h"
 #include "st7735.h"
 #include "utils.h"
+#include "pid.h"
+#include "Compass/HMC5883L.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -71,10 +73,10 @@ const osThreadAttr_t StateMachine_attributes = {
         .stack_size = 128 * 4,
         .priority = (osPriority_t) osPriorityRealtime,
 };
-/* Definitions for GetInfraredData */
-osThreadId_t GetInfraredDataHandle;
-const osThreadAttr_t GetInfraredData_attributes = {
-        .name = "GetInfraredData",
+/* Definitions for AttitudeControl */
+osThreadId_t AttitudeControlHandle;
+const osThreadAttr_t AttitudeControl_attributes = {
+        .name = "AttitudeControl",
         .stack_size = 128 * 4,
         .priority = (osPriority_t) osPriorityNormal,
 };
@@ -106,13 +108,13 @@ void _putchar(char character) {
 
 /* USER CODE END FunctionPrototypes */
 
-void ledControlEnter(void *argument);
+void LEDControlEntry(void *argument);
 
 void ScreenRefreshEntry(void *argument);
 
 void StateMachineEntry(void *argument);
 
-void GetInfraredDataEntry(void *argument);
+void AttitudeControlEntry(void *argument);
 
 void StepControlEntry(void *argument);
 
@@ -152,7 +154,7 @@ void MX_FREERTOS_Init(void) {
 
     /* Create the thread(s) */
     /* creation of LEDcontrol */
-    LEDcontrolHandle = osThreadNew(ledControlEnter, NULL, &LEDcontrol_attributes);
+    LEDcontrolHandle = osThreadNew(LEDControlEntry, NULL, &LEDcontrol_attributes);
 
     /* creation of ScreenRefresh */
     ScreenRefreshHandle = osThreadNew(ScreenRefreshEntry, NULL, &ScreenRefresh_attributes);
@@ -160,8 +162,8 @@ void MX_FREERTOS_Init(void) {
     /* creation of StateMachine */
     StateMachineHandle = osThreadNew(StateMachineEntry, NULL, &StateMachine_attributes);
 
-    /* creation of GetInfraredData */
-    GetInfraredDataHandle = osThreadNew(GetInfraredDataEntry, NULL, &GetInfraredData_attributes);
+    /* creation of AttitudeControl */
+    AttitudeControlHandle = osThreadNew(AttitudeControlEntry, NULL, &AttitudeControl_attributes);
 
     /* creation of StepControl */
     StepControlHandle = osThreadNew(StepControlEntry, NULL, &StepControl_attributes);
@@ -179,23 +181,20 @@ void MX_FREERTOS_Init(void) {
 
 }
 
-/* USER CODE BEGIN Header_ledControlEnter */
+/* USER CODE BEGIN Header_LEDControlEntry */
 /**
   * @brief  Function implementing the LEDcontrol thread.
   * @param  argument: Not used
   * @retval None
   */
-/* USER CODE END Header_ledControlEnter */
-void ledControlEnter(void *argument) {
-    /* USER CODE BEGIN ledControlEnter */
+/* USER CODE END Header_LEDControlEntry */
+void LEDControlEntry(void *argument) {
+    /* USER CODE BEGIN LEDControlEntry */
     /* Infinite loop */
     for (;;) {
-        HAL_GPIO_WritePin(GPIOE, GPIO_PIN_3, GPIO_PIN_SET);
-        osDelay(50);
-        HAL_GPIO_WritePin(GPIOE, GPIO_PIN_3, GPIO_PIN_RESET);
-        osDelay(950);
+        osDelay(1);
     }
-    /* USER CODE END ledControlEnter */
+    /* USER CODE END LEDControlEntry */
 }
 
 /* USER CODE BEGIN Header_ScreenRefreshEntry */
@@ -225,25 +224,41 @@ void StateMachineEntry(void *argument) {
     /* USER CODE BEGIN StateMachineEntry */
     /* Infinite loop */
     for (;;) {
-        RunMainState();
+        CarInfo.RunMainState();
     }
     /* USER CODE END StateMachineEntry */
 }
 
-/* USER CODE BEGIN Header_GetInfraredDataEntry */
+/* USER CODE BEGIN Header_AttitudeControlEntry */
 /**
-* @brief Function implementing the GetInfraredData thread.
+* @brief Function implementing the AttitudeControl thread.
 * @param argument: Not used
 * @retval None
 */
-/* USER CODE END Header_GetInfraredDataEntry */
-void GetInfraredDataEntry(void *argument) {
-    /* USER CODE BEGIN GetInfraredDataEntry */
+/* USER CODE END Header_AttitudeControlEntry */
+void AttitudeControlEntry(void *argument) {
+    /* USER CODE BEGIN AttitudeControlEntry */
     /* Infinite loop */
     for (;;) {
-        osDelay(1);
+        if (CarInfo.aPidLock == aPidLocked) {
+            PID_Init(&CarInfo.aPid, 0, 0, 0, 0);
+        } else {
+            // 采集传感器数据
+            static hmcData_t hmc;
+            HMC5883_GetData(&hmc);
+            hmc.Mx += 0;
+            hmc.My += 0;
+
+            // PID闭环控制
+            CarInfo.aPid.ctr.aim = 0;
+            CarInfo.aPid.ctr.cur = atan2f(hmc.Mx, hmc.My);
+            CarInfo.aPidOut = PID_RealizeForAngle(&CarInfo.aPid);// 注意弧度制
+            CarInfo.aPid.ctr.pre = CarInfo.aPid.ctr.cur;
+        }
+
+        osDelayUntil(CarInfo.aPidPeriod);
     }
-    /* USER CODE END GetInfraredDataEntry */
+    /* USER CODE END AttitudeControlEntry */
 }
 
 /* USER CODE BEGIN Header_StepControlEntry */
