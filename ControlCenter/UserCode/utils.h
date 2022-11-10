@@ -8,16 +8,18 @@
 #define CONTROLCENTER_UTILS_H
 
 #include "stdint.h"
+#include "pid.h"
 
 typedef struct CarControlBlock {
-    // 当前场内坐标
+    // 状态数据
     float x, y;
+    float yaw;// 弧度制
 
     // 存储三色物块抓取和放置顺序
     uint8_t order[3];
     enum orderCommand {
         Red = 0, Blue, Green
-    };
+    } orderCommand;
 
     // 状态机状态枚举
     enum mainState {// 主状态机
@@ -32,13 +34,22 @@ typedef struct CarControlBlock {
         dStart, dDrop1, dDrop2, dDrop3, dEnd
     } dropState;
 
+    // PID姿态控制
+    pid_t aPid;
+    float aPidOut;
+    const int aPidPeriod;
+    enum aPidLock {
+        aPidLocked, aPidUnlocked
+    } aPidLock;
 
+    // 状态机相关函数
+    void (*RunMainState)(void);
+
+    void (*RunFetchState)(void);
+
+    void (*RunDropState)(void);
 } CCB_Typedef;
 
-void RunFetchState(void);
-
-void RunDropState(void);
-
-void RunMainState(void);
+extern CCB_Typedef CarInfo;
 
 #endif //CONTROLCENTER_UTILS_H

@@ -4,16 +4,10 @@
  * @brief 
  * @date 2022/11/8
   */
+#include <stddef.h>
 #include "utils.h"
-
-CCB_Typedef CarInfo = {
-        .order[Red] = 1,
-        .order[Blue] = 2,
-        .order[Green] = 3,
-        .mainState = mStart,
-        .fetchState = fStart,
-        .dropState = dStart,
-};
+#include "tim.h"
+#include "CommonKey/comKey.h"
 
 void RunMainState(void) {
     switch (CarInfo.mainState) {
@@ -27,10 +21,14 @@ void RunMainState(void) {
 
             break;
         case mFirstFetch:// 第一次抓取
-            RunFetchState();
+            if (CarInfo.RunFetchState != NULL) {
+                CarInfo.RunFetchState();
+            }
             break;
         case mFirstDrop:// 第一次放下
-            RunDropState();
+            if (CarInfo.RunDropState != NULL) {
+                CarInfo.RunDropState();
+            }
             break;
         case mEnd:
             break;
@@ -76,5 +74,24 @@ void RunDropState(void) {
             case dEnd:
                 break;
         }
+    }
+}
+
+CCB_Typedef CarInfo = {
+        .order[Red] = 1,
+        .order[Blue] = 2,
+        .order[Green] = 3,
+        .mainState = mStart,
+        .fetchState = fStart,
+        .dropState = dStart,
+        .aPidPeriod = 50,
+        .RunMainState = RunMainState,
+        .RunFetchState = RunFetchState,
+        .RunDropState = RunDropState
+};
+
+void HAL_TIM_PWM_PulseFinishedHalfCpltCallback(TIM_HandleTypeDef *htim) {
+    if (htim->Instance == TIM3) {
+
     }
 }
