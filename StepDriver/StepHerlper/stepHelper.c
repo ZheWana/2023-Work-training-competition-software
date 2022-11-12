@@ -43,7 +43,7 @@ void Step_Init(stepTypedef* hstep, TIM_HandleTypeDef* phtim, uint32_t channel, G
     hstep->Fcur = Fmin;
     hstep->buffIndex = 0;
 
-    hstep->state = Acclerate;
+    hstep->state = Stop;
 
     hstep->useDec = 1;
 
@@ -307,12 +307,7 @@ void Step_Abort(stepTypedef* hstep)
  */
 int Step_Prefill(stepTypedef* hstep, int stepToGo, uint8_t dir, uint8_t useDec)
 {
-    // Lock while running.
-    if (hstep->lock == UNLOCK) {
-        hstep->lock = LOCK;
-    } else {
-        return -1;
-    }
+    Step_Lock(hstep);
 
     hstep->stepToGo = stepToGo;
     hstep->useDec = useDec;
