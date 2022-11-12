@@ -7,5 +7,6 @@
 #ifndef CONTROLCENTER_KEY_H
 #define CONTROLCENTER_KEY_H
 
+void KeyInit(void);
 
 #endif //CONTROLCENTER_KEY_H
