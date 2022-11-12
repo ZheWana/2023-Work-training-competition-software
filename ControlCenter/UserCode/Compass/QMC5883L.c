@@ -16,23 +16,14 @@ int QMC5883_Init(void) {
         data = 0x01;
         if (HAL_I2C_Mem_Write(&hi2c1, QMC5883_Addr, QMC_SETorRESETReg, 1, (uint8_t *) &data, 1, 1000))
             return -1;
-        data = 0x15;
+        data = 0x1D;
         if (HAL_I2C_Mem_Write(&hi2c1, QMC5883_Addr, QMC_ControlReg1, 1, (uint8_t *) &data, 1, 1000))
             return -1;
-        uint8_t temp = data;
-        if (HAL_I2C_Mem_Read(&hi2c1, QMC5883_Addr, QMC_ControlReg1, 1, (uint8_t *) &data, 1, 1000))
-            return -1;
-        if (data != temp)return -3;
     } else { return -2; }
     return 0;
 }
 
 int QMC5883_GetData(hmcData_t *data) {
-    uint8_t status;
-    if (HAL_I2C_Mem_Read(&hi2c1, QMC5883_Addr, QMC_DataXLSB, 1, (uint8_t *) &status, 1, HAL_MAX_DELAY))
-        return -1;
-    if ((status & 1) != 1)return -2;
-
     uint8_t temp[6];
     if (HAL_I2C_Mem_Read(&hi2c1, QMC5883_Addr, QMC_DataXLSB, 1, (uint8_t *) &temp, 6, HAL_MAX_DELAY))
         return -1;
