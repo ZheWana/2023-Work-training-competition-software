@@ -16,7 +16,7 @@
 #if !LOG_LEVEL_NONE
 #define LOG_LEVEL_DATA      1
 #define LOG_LEVEL_DEBUG     2
-#define LOG_LEVEL_INFO      3
+//#define LOG_LEVEL_INFO      3
 #define LOG_LEVEL_WARN      4
 #define LOG_LEVEL_ERROR     5
 #endif
@@ -36,18 +36,26 @@ int UART_printf(const char *fmt, ...);
 #endif//DeviceFamily_TM4C12x
 #endif
 
-#define ConditionLog(__level, __condition, __msg, ...) do{if(__condition){  \
-switch(__level){                                                            \
-case LOG_LEVEL_DEBUG:DebugLog(__msg,##__VA_ARGS__);break;                   \
-case LOG_LEVEL_INFO:InfoLog(__msg,##__VA_ARGS__);break;                     \
-case LOG_LEVEL_WARN:WarnLog(__msg,##__VA_ARGS__);break;                     \
-case LOG_LEVEL_ERROR:ErrorLog(__msg,##__VA_ARGS__);break;                   \
-}}}while(0)
-
-#define DebugConLog(__condition, __dbgmsg, ...) ConditionLog(LOG_LEVEL_DEBUG,__condition,__dbgmsg,##__VA_ARGS__)
-#define InfoConLog(__condition, __infomsg, ...) ConditionLog(LOG_LEVEL_INFO,__condition,__infomsg,##__VA_ARGS__)
-#define WarnConLog(__condition, __warnmsg, ...) ConditionLog(LOG_LEVEL_WARN,__condition,__warnmsg,##__VA_ARGS__)
-#define ErrorConLog(__condition, __errmsg, ...) ConditionLog(LOG_LEVEL_ERROR,__condition,__errmsg,##__VA_ARGS__)
+#ifdef LOG_LEVEL_DEBUG
+#define DebugConLog(__condition, __dbgmsg, ...) do{if(__condition){DebugLog(__dbgmsg,##__VA_ARGS__);}}while(0)
+#else
+#define DebugConLog(...) do{}while(0)
+#endif
+#ifdef LOG_LEVEL_INFO
+#define InfoConLog(__condition, __infomsg, ...) do{if(__condition){InfoLog(__infomsg,##__VA_ARGS__);}}while(0)
+#else
+#define InfoConLog(...) do{}while(0)
+#endif
+#ifdef LOG_LEVEL_WARN
+#define WarnConLog(__condition, __warnmsg, ...) do{if(__condition){WarnLog(__warnmsg,##__VA_ARGS__);}}while(0)
+#else
+#define WarnConLog(...) do{}while(0)
+#endif
+#ifdef LOG_LEVEL_ERROR
+#define ErrorConLog(__condition, __errmsg, ...) do{if(__condition){ErrorLog(__errmsg,##__VA_ARGS__);}}while(0)
+#else
+#define ErrorConLog(...) do{}while(0)
+#endif
 
 /*******************************************************************************************************************************************/
 #ifdef USE_HAL_DRIVER
