@@ -12,6 +12,10 @@
 #ifndef PID_H
 #define PID_H
 
+#ifndef M_PI
+#define M_PI 3.1415926535
+#endif
+
 typedef struct {
     float kp;
     float ki;

@@ -27,9 +27,9 @@
 /* USER CODE BEGIN Includes */
 #include "printf.h"
 #include "usart.h"
-#include "st7735.h"
+#include "ST7735/Inc/st7735.h"
 #include "utils.h"
-#include "pid.h"
+#include "PID/pid.h"
 #include "Compass/QMC5883L.h"
 #include "DebugLogger/Debug.h"
 /* USER CODE END Includes */
@@ -260,18 +260,26 @@ void AttitudeControlEntry(void *argument) {
             temp++;
 
             int res = QMC5883_Init();
-//            DebugConLog(res == 0, "QMC5883_Init:Init OK");
-//            DebugConLog(res == -1, "QMC5883_Init:IIC ERROR");
-//            DebugConLog(res == -2, "QMC5883_Init:ID Check ERROR");
+            DebugConLog(res == 0, "QMC5883_Init:Init OK");
+            DebugConLog(res == -1, "QMC5883_Init:IIC ERROR");
+            DebugConLog(res == -2, "QMC5883_Init:ID Check ERROR");
+            DebugConLog(res == -3, "QMC5883_Init:Register content ERROR");
         }
         int res = QMC5883_GetData(&hmc);
-//            DebugConLog(res == 0, "QMC5883_GetData:Init OK");
-//            DebugConLog(res == -1, "QMC5883_GetData:IIC ERROR");
+        DebugConLog(res == 0, "QMC5883_GetData:Init OK");
+        DebugConLog(res == -1, "QMC5883_GetData:IIC ERROR");
+        DebugConLog(res == -2, "QMC5883_GetData:Data not Ready");
         if (res == 0) {
-            DataLog("Mx = %f,My = %f", hmc.Mx, hmc.My);
+            DataLog("Mx = %f,My = %f\n", hmc.Mx, hmc.My);
             DataLog("yaw = %f", ToDig(atan2f(hmc.Mx, hmc.My)));
         }
-
+        uint8_t data;
+        HAL_I2C_Mem_Read(&hi2c1, QMC5883_Addr, QMC_StatusReg, 1, &data, 1, HAL_MAX_DELAY);
+        DebugLog("Status Reg:%x",data);
+        HAL_I2C_Mem_Read(&hi2c1, QMC5883_Addr, QMC_ControlReg1, 1, &data, 1, HAL_MAX_DELAY);
+        DebugLog("Control Reg1:%x",data);
+        HAL_I2C_Mem_Read(&hi2c1, QMC5883_Addr, QMC_ControlReg2, 1, &data, 1, HAL_MAX_DELAY);
+        DebugLog("Control Reg2:%x",data);
 
         hmc.Mx += 0;
         hmc.My += 0;
@@ -280,7 +288,7 @@ void AttitudeControlEntry(void *argument) {
 //        if (CarInfo.aPidLock == aPidLocked) {
 //            PID_Init(&CarInfo.aPid, 0, 0, 0, 0);
 //        } else {
-//            // 采集传感器数�?
+//            // 采集传感器数�??
 //            static hmcData_t hmc;
 //            QMC5883_GetData(&hmc);
 //            hmc.Mx += 0;
@@ -290,7 +298,7 @@ void AttitudeControlEntry(void *argument) {
 //            CarInfo.aPid.ctr.aim = 0;
 //            CarInfo.aPid.ctr.cur = CarInfo.yaw = atan2f(hmc.Mx, hmc.My);
 //            osSemaphoreAcquire(bGetaPidOutSemHandle, UINT32_MAX);
-//            CarInfo.aPidOut = PID_RealizeForAngle(&CarInfo.aPid);// 注意弧度�?
+//            CarInfo.aPidOut = PID_RealizeForAngle(&CarInfo.aPid);// 注意弧度�??
 //            osSemaphoreRelease(bGetaPidOutSemHandle);
 //            CarInfo.aPid.ctr.pre = CarInfo.aPid.ctr.cur;
 //        }

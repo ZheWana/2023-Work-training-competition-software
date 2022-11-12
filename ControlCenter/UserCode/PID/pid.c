@@ -9,7 +9,7 @@
  *
  */
 
-#include "pid.h"
+#include "./pid.h"
 #include "main.h"
 #include "math.h"
 

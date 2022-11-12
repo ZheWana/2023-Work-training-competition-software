@@ -87,4 +87,3 @@ JLink*.txt
 !/*/MDK-ARM/StepDriver/*.sct
 /Local_test
 /**/*build*debug
-/**/.idea

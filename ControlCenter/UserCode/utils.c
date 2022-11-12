@@ -8,7 +8,7 @@
 #include "utils.h"
 #include "tim.h"
 #include "CommonKey/comKey.h"
-#include "st7735.h"
+#include "./ST7735/Inc/st7735.h"
 
 void __RunMainState(void) {
     switch (CarInfo.mainState) {

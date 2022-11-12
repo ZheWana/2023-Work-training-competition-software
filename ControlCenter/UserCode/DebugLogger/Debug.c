@@ -8,6 +8,7 @@
 #include "Debug.h"
 
 #ifdef USE_HAL_DRIVER
+#ifndef _PRINTF_H_
 int UART_printf(UART_HandleTypeDef *huart, const char *fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
@@ -22,6 +23,7 @@ int UART_printf(UART_HandleTypeDef *huart, const char *fmt, ...) {
     va_end(ap);
     return length;
 }
+#endif
 #endif//USE_HAL_DRIVER
 
 #ifdef DeviceFamily_TM4C12x
