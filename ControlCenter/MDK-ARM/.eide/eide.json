@@ -2,11 +2,18 @@
   "name": "ControlCenter",
   "type": "ARM",
   "dependenceList": [],
-  "srcDirs": [],
+  "srcDirs": [
+    ".eide/deps"
+  ],
   "virtualFolder": {
     "name": "<virtual_root>",
     "files": [],
     "folders": [
+      {
+        "name": "::CMSIS",
+        "files": [],
+        "folders": []
+      },
       {
         "name": "Application",
         "files": [],
@@ -28,28 +35,22 @@
                 "name": "Core",
                 "files": [
                   {
-                    "path": "../Core/Src/main.c"
+                    "path": "../Core/Src/freertos.c"
                   },
                   {
                     "path": "../Core/Src/gpio.c"
                   },
                   {
-                    "path": "../Core/Src/freertos.c"
-                  },
-                  {
                     "path": "../Core/Src/i2c.c"
                   },
                   {
+                    "path": "../Core/Src/main.c"
+                  },
+                  {
+                    "path": "../Core/Src/printf.c"
+                  },
+                  {
                     "path": "../Core/Src/spi.c"
-                  },
-                  {
-                    "path": "../Core/Src/tim.c"
-                  },
-                  {
-                    "path": "../Core/Src/usart.c"
-                  },
-                  {
-                    "path": "../Core/Src/stm32h7xx_it.c"
                   },
                   {
                     "path": "../Core/Src/stm32h7xx_hal_msp.c"
@@ -58,7 +59,13 @@
                     "path": "../Core/Src/stm32h7xx_hal_timebase_tim.c"
                   },
                   {
-                    "path": "../Core/Src/printf.c"
+                    "path": "../Core/Src/stm32h7xx_it.c"
+                  },
+                  {
+                    "path": "../Core/Src/tim.c"
+                  },
+                  {
+                    "path": "../Core/Src/usart.c"
                   }
                 ],
                 "folders": []
@@ -71,6 +78,15 @@
         "name": "Drivers",
         "files": [],
         "folders": [
+          {
+            "name": "CMSIS",
+            "files": [
+              {
+                "path": "../Core/Src/system_stm32h7xx.c"
+              }
+            ],
+            "folders": []
+          },
           {
             "name": "STM32H7xx_HAL_Driver",
             "files": [
@@ -139,15 +155,6 @@
               },
               {
                 "path": "../Drivers/STM32H7xx_HAL_Driver/Src/stm32h7xx_hal_uart_ex.c"
-              }
-            ],
-            "folders": []
-          },
-          {
-            "name": "CMSIS",
-            "files": [
-              {
-                "path": "../Core/Src/system_stm32h7xx.c"
               }
             ],
             "folders": []
@@ -231,18 +238,15 @@
           }
         ],
         "folders": []
-      },
-      {
-        "name": "::CMSIS",
-        "files": [],
-        "folders": []
       }
     ]
   },
   "outDir": "build",
   "deviceName": null,
   "packDir": null,
-  "miscInfo": {},
+  "miscInfo": {
+    "uid": "b31fe63dcf465dd91461475c1d45f84a"
+  },
   "targets": {
     "ControlCenter": {
       "excludeList": [],
@@ -375,8 +379,6 @@
       "uploadConfigMap": {},
       "custom_dep": {
         "name": "default",
-        "sourceDirList": [],
-        "libList": [],
         "incList": [
           "../Core/Inc",
           "../Drivers/STM32H7xx_HAL_Driver/Inc",
@@ -389,8 +391,11 @@
           "../UserCode",
           ".cmsis/dsp_lib",
           ".cmsis/include",
-          "RTE/_ControlCenter"
+          "RTE/_ControlCenter",
+          ".eide/deps"
         ],
+        "libList": [],
+        "sourceDirList": [],
         "defineList": [
           "USE_HAL_DRIVER",
           "STM32H750xx"
