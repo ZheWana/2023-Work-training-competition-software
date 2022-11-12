@@ -30,7 +30,8 @@
 #include "st7735.h"
 #include "utils.h"
 #include "pid.h"
-#include "Compass/HMC5883L.h"
+#include "Compass/QMC5883L.h"
+#include "DebugLogger/Debug.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -57,21 +58,21 @@ osThreadId_t LEDcontrolHandle;
 const osThreadAttr_t LEDcontrol_attributes = {
         .name = "LEDcontrol",
         .stack_size = 128 * 4,
-        .priority = (osPriority_t) osPriorityHigh,
+        .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for ScreenRefresh */
 osThreadId_t ScreenRefreshHandle;
 const osThreadAttr_t ScreenRefresh_attributes = {
         .name = "ScreenRefresh",
         .stack_size = 128 * 4,
-        .priority = (osPriority_t) osPriorityHigh,
+        .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for StateMachine */
 osThreadId_t StateMachineHandle;
 const osThreadAttr_t StateMachine_attributes = {
         .name = "StateMachine",
         .stack_size = 128 * 4,
-        .priority = (osPriority_t) osPriorityRealtime,
+        .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for AttitudeControl */
 osThreadId_t AttitudeControlHandle;
@@ -85,25 +86,30 @@ osThreadId_t StepControlHandle;
 const osThreadAttr_t StepControl_attributes = {
         .name = "StepControl",
         .stack_size = 128 * 4,
-        .priority = (osPriority_t) osPriorityHigh,
+        .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for SerialOutput */
 osThreadId_t SerialOutputHandle;
 const osThreadAttr_t SerialOutput_attributes = {
         .name = "SerialOutput",
         .stack_size = 128 * 4,
-        .priority = (osPriority_t) osPriorityLow,
+        .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for MessageQueue */
 osMessageQueueId_t MessageQueueHandle;
 const osMessageQueueAttr_t MessageQueue_attributes = {
         .name = "MessageQueue"
 };
+/* Definitions for bGetaPidOutSem */
+osSemaphoreId_t bGetaPidOutSemHandle;
+const osSemaphoreAttr_t bGetaPidOutSem_attributes = {
+        .name = "bGetaPidOutSem"
+};
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
 void _putchar(char character) {
-    HAL_UART_Transmit(&huart4, (uint8_t *) &character, 1, HAL_MAX_DELAY);
+    HAL_UART_Transmit(&huart5, (uint8_t *) &character, 1, HAL_MAX_DELAY);
 }
 
 /* USER CODE END FunctionPrototypes */
@@ -135,6 +141,10 @@ void MX_FREERTOS_Init(void) {
     /* USER CODE BEGIN RTOS_MUTEX */
     /* add mutexes, ... */
     /* USER CODE END RTOS_MUTEX */
+
+    /* Create the semaphores(s) */
+    /* creation of bGetaPidOutSem */
+    bGetaPidOutSemHandle = osSemaphoreNew(1, 1, &bGetaPidOutSem_attributes);
 
     /* USER CODE BEGIN RTOS_SEMAPHORES */
     /* add semaphores, ... */
@@ -192,7 +202,10 @@ void LEDControlEntry(void *argument) {
     /* USER CODE BEGIN LEDControlEntry */
     /* Infinite loop */
     for (;;) {
-        osDelay(1);
+        HAL_GPIO_WritePin(GPIOE, GPIO_PIN_3, GPIO_PIN_SET);
+        osDelay(50);
+        HAL_GPIO_WritePin(GPIOE, GPIO_PIN_3, GPIO_PIN_RESET);
+        osDelay(950);
     }
     /* USER CODE END LEDControlEntry */
 }
@@ -240,23 +253,50 @@ void AttitudeControlEntry(void *argument) {
     /* USER CODE BEGIN AttitudeControlEntry */
     /* Infinite loop */
     for (;;) {
-        if (CarInfo.aPidLock == aPidLocked) {
-            PID_Init(&CarInfo.aPid, 0, 0, 0, 0);
-        } else {
-            // 采集传感器数据
-            static hmcData_t hmc;
-            HMC5883_GetData(&hmc);
-            hmc.Mx += 0;
-            hmc.My += 0;
+        static hmcData_t hmc;
+        static int temp = 0;
 
-            // PID闭环控制
-            CarInfo.aPid.ctr.aim = 0;
-            CarInfo.aPid.ctr.cur = atan2f(hmc.Mx, hmc.My);
-            CarInfo.aPidOut = PID_RealizeForAngle(&CarInfo.aPid);// 注意弧度制
-            CarInfo.aPid.ctr.pre = CarInfo.aPid.ctr.cur;
+        if (!temp) {
+            temp++;
+
+            int res = QMC5883_Init();
+//            DebugConLog(res == 0, "QMC5883_Init:Init OK");
+//            DebugConLog(res == -1, "QMC5883_Init:IIC ERROR");
+//            DebugConLog(res == -2, "QMC5883_Init:ID Check ERROR");
+        }
+        int res = QMC5883_GetData(&hmc);
+//            DebugConLog(res == 0, "QMC5883_GetData:Init OK");
+//            DebugConLog(res == -1, "QMC5883_GetData:IIC ERROR");
+        if (res == 0) {
+            DataLog("Mx = %f,My = %f", hmc.Mx, hmc.My);
+            DataLog("yaw = %f", ToDig(atan2f(hmc.Mx, hmc.My)));
         }
 
-        osDelayUntil(CarInfo.aPidPeriod);
+
+        hmc.Mx += 0;
+        hmc.My += 0;
+
+
+//        if (CarInfo.aPidLock == aPidLocked) {
+//            PID_Init(&CarInfo.aPid, 0, 0, 0, 0);
+//        } else {
+//            // 采集传感器数�?
+//            static hmcData_t hmc;
+//            QMC5883_GetData(&hmc);
+//            hmc.Mx += 0;
+//            hmc.My += 0;
+//
+//            // PID闭环控制
+//            CarInfo.aPid.ctr.aim = 0;
+//            CarInfo.aPid.ctr.cur = CarInfo.yaw = atan2f(hmc.Mx, hmc.My);
+//            osSemaphoreAcquire(bGetaPidOutSemHandle, UINT32_MAX);
+//            CarInfo.aPidOut = PID_RealizeForAngle(&CarInfo.aPid);// 注意弧度�?
+//            osSemaphoreRelease(bGetaPidOutSemHandle);
+//            CarInfo.aPid.ctr.pre = CarInfo.aPid.ctr.cur;
+//        }
+
+//        osDelayUntil(CarInfo.aPidPeriod);
+        osDelay(100);
     }
     /* USER CODE END AttitudeControlEntry */
 }
@@ -272,10 +312,19 @@ void StepControlEntry(void *argument) {
     /* USER CODE BEGIN StepControlEntry */
     /* Infinite loop */
     for (;;) {
-        char *string = "message";
-        size_t buff = (size_t) string;
-        osMessageQueuePut(MessageQueueHandle, &buff, 0, 0xffff);
-        osDelay(200);
+        static uint8_t buff[16] = {[0] = 0x55, [15] = 0xAA};
+
+        if (CarInfo.aimX != CarInfo.curX || CarInfo.aimY != CarInfo.curY) {
+            float vx = CarInfo.aimX - CarInfo.curX, vy = CarInfo.aimY - CarInfo.curY,
+                    freq1, freq2, freq3, freq4;
+
+
+            Speed2MotorConverter(vx, vy, &freq1, &freq2, &freq3, &freq4);
+            // TODO:
+            //  Add aPid data to freq
+            //  Handle buffer data
+            //  Send buffer to driver
+        }
     }
     /* USER CODE END StepControlEntry */
 }
@@ -291,10 +340,9 @@ void SerialOutputEntry(void *argument) {
     /* USER CODE BEGIN SerialOutputEntry */
     /* Infinite loop */
     for (;;) {
-        size_t msg;
-        osMessageQueueGet(MessageQueueHandle, &msg, 0, 0xffff);
-        printf("%s\n", (char *) msg);
-        osDelay(100);
+//        size_t msg;
+//        osMessageQueueGet(MessageQueueHandle, &msg, 0, 0xffff);
+//        printf("%s\n", (char *) msg);
     }
     /* USER CODE END SerialOutputEntry */
 }
