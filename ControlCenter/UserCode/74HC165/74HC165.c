@@ -27,4 +27,5 @@ uint8_t HC165_Get_Data(uint16_t *Data) {
     }
     *Data = Data_2;
 #endif
+		return 0;
 }
