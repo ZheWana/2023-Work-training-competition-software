@@ -43,7 +43,7 @@ void Step_Init(stepTypedef* hstep, TIM_HandleTypeDef* phtim, uint32_t channel, G
     hstep->Fcur = Fmin;
     hstep->buffIndex = 0;
 
-    hstep->state = Acclerate;
+    hstep->state = Stop;
 
     hstep->useDec = 1;
 

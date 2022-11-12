@@ -74,6 +74,7 @@ typedef struct stepTypedef {
 
     // flags
     uint8_t useDec : 1;
+    uint8_t useAsMotor : 1;
     uint8_t buffIndex : 1; // ----------------------internal use
     uint8_t buffRdy : 1; // ----------------------internal use
 } stepTypedef;

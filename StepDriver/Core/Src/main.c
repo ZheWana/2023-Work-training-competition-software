@@ -94,7 +94,7 @@ void Data_ReFormatData(char* buff, int len, char frameHead)
 void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef* hspi)
 {
 
-    uint32_t startSpd = 0, finalSpd = 0, accTime = 0, StepNum = 0;
+    uint32_t startSpd = 0, finalSpd = 0, accTime = 0, StepNum = 0, freq = 0;
     uint8_t dir = 0, useDec = 0;
 
     if (hspi == &hspi1) {
@@ -128,7 +128,12 @@ void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef* hspi)
             // init
             Step_Init(&steplist[motorID], steplist[motorID].phtim, steplist[motorID].channel, steplist[motorID].gpioPort, steplist[motorID].gpioPin, startSpd, finalSpd, accTime);
             break;
-        case 0x02: // Drive
+        case 0x02: // Drive as Stepper
+            // Check and Close output
+            if (steplist[motorID].useAsMotor == 1) {
+                steplist[motorID].useAsMotor = 0;
+                HAL_TIM_PWM_Stop(steplist[motorID].phtim, steplist[motorID].channel);
+            }
             // get parameter
             StepNum = *(uint32_t*)&Buff[3];
             dir = Buff[7];
@@ -142,6 +147,19 @@ void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef* hspi)
             Step_Abort(&steplist[motorID]);
             break;
 
+        case 0x04: // Drive as Motor
+            steplist[motorID].useAsMotor = 1;
+            // Close output
+            if (steplist[motorID].state != Stop) {
+                HAL_TIM_PWM_Stop_DMA(steplist[motorID].phtim, steplist[motorID].channel);
+            }
+            // Get Data
+            freq = *(uint32_t*)&Buff[3];
+            dir = Buff[7];
+            // Get PSC
+            steplist[motorID].phtim->Instance->PSC = (uint16_t)((RCC_MAX_FREQUENCY / (steplist[motorID].phtim->Instance->ARR + 1)) / steplist[motorID].Fcur - 1);
+
+            break;
         default:
             break;
         }
@@ -173,10 +191,13 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef* htim)
 /* USER CODE BEGIN 0 */
 
 // Command List (16-bytes):
+//  In Stepper Mode:
 // Reset : byte0-0x55; byte1-Instruction(0x00); byte2-motorID;                               byte3:14-Reserved;                               byte15-0xAA;
 // Init  : byte0-0x55; byte1-Instruction(0x01); byte2-motorID; byte3:6-StartSpeed(Hz); byte7:10-FinalSpeed(Hz); byte11:14-AccelerateTime(ms); byte15-0xAA;
 // Driver: byte0-0x55; byte1-Instruction(0x02); byte2-motorID; byte3:6-StepNumber(Hz); byte7-Direction; byte8-UseDecelerate;                  byte15-0xAA;
 // Abort : byte0-0x55; byte1-Instruction(0x03); byte2-motorID;                               byte3:14-Reserved;                               byte15-0xAA;
+//  In Motor Mode:
+// Drive : byte0-0x55; byte1-Instruction(0x04); byte2-motorID; byte3-Direction;              byte4:14-Reserved;                               byte15-0xAA;
 
 /* USER CODE END 0 */
 
@@ -228,7 +249,7 @@ int main(void)
     HAL_SPI_Receive_DMA(&hspi1, Buff, 16);
 
     for (int i = 0; i < 5; i++) {
-        Step_Prefill(&steplist[i], (i+1) * 1000, 0, Decelerate_USE);
+        Step_Prefill(&steplist[i], (i + 1) * 1000, 0, Decelerate_USE);
         HAL_TIM_PWM_PulseFinishedCallback(steplist[i].phtim);
     }
 
