@@ -14,7 +14,7 @@
 #include "math.h"
 
 // PID实现函数
-float PID_Realize(pid_t* ctrl)
+float PID_Realize(Pid_t* ctrl)
 {
     ctrl->error.cur = ctrl->ctr.aim - ctrl->ctr.cur;
     ctrl->error.sum += ctrl->error.cur;
@@ -31,7 +31,7 @@ float PID_Realize(pid_t* ctrl)
     return ctrl->kp * ctrl->error.cur + ctrl->ki * ctrl->error.sum + ctrl->kd * ctrl->error.bia;
 }
 
-float PID_RealizeForAngle(pid_t* ctrl)
+float PID_RealizeForAngle(Pid_t* ctrl)
 {
     ctrl->error.cur = ctrl->ctr.aim - ctrl->ctr.cur;
     if (fabsf(ctrl->error.cur) > M_PI && fabsf(ctrl->error.cur) < 2 * M_PI) { // 角度溢出处理
@@ -48,7 +48,7 @@ float PID_RealizeForAngle(pid_t* ctrl)
 }
 
 // PID初始化函数
-void PID_Init(pid_t* ctrl, float kp, float ki, float kd, float aim)
+void PID_Init(Pid_t* ctrl, float kp, float ki, float kd, float aim)
 {
     ctrl->kp = kp;
     ctrl->ki = ki;

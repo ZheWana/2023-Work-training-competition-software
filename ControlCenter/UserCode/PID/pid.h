@@ -34,14 +34,14 @@ typedef struct {
         float bia;
     } error;
 
-} pid_t;
+} Pid_t;
 
 // PID实现函数
-float PID_Realize(pid_t *ctrl);
+float PID_Realize(Pid_t *ctrl);
 
-float PID_RealizeForAngle(pid_t *ctrl);
+float PID_RealizeForAngle(Pid_t *ctrl);
 
 // PID初始化函数
-void PID_Init(pid_t *ctrl, float kp, float ki, float kd, float aim);
+void PID_Init(Pid_t *ctrl, float kp, float ki, float kd, float aim);
 
 #endif // PID_H
