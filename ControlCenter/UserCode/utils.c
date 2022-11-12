@@ -4,11 +4,13 @@
  * @brief 
  * @date 2022/11/8
   */
+#include "./ST7735/Inc/st7735.h"
+#include "./Compass/QMC5883L.h"
+#include "CommonKey/comKey.h"
 #include <stddef.h>
 #include "utils.h"
 #include "tim.h"
-#include "CommonKey/comKey.h"
-#include "./ST7735/Inc/st7735.h"
+#include "key.h"
 
 void __RunMainState(void) {
     switch (CarInfo.mainState) {
@@ -16,10 +18,16 @@ void __RunMainState(void) {
             // TODO:
             //  升降电机初始化
             //  按键初始化yaw坐标系
-
+            // Hard Init
+            QMC5883_Init();
 //            ST7735_Init();
 
+            // Soft Init
+            KeyInit();
+            PID_Init(&CarInfo.aPid, 0, 0, 0, 0);
+
             CarInfo.mainState = mScan;
+            CarInfo.aPidLock = aPidUnlocked;
             break;
         case mScan:// 扫描二维码,记录信息
             // 出库,到达定点后发出Rdy信号

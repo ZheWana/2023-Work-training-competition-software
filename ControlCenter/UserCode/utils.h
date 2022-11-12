@@ -45,7 +45,7 @@ typedef struct CarControlBlock {
     } dropState;
 
     // PID姿态控制
-    pid_t aPid;
+    Pid_t aPid;
     float aPidOut;
     const int aPidPeriod;
     enum aPidLock {
