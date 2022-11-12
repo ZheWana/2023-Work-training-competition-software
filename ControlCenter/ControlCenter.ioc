@@ -1,10 +1,11 @@
 #MicroXplorer Configuration settings - do not modify
 CORTEX_M7.IPParameters=default_mode_Activation
 CORTEX_M7.default_mode_Activation=1
+FREERTOS.BinarySemaphores01=bGetaPidOutSem,Dynamic,NULL
 FREERTOS.FootprintOK=true
-FREERTOS.IPParameters=Tasks01,FootprintOK,Queues01
+FREERTOS.IPParameters=Tasks01,FootprintOK,Queues01,BinarySemaphores01
 FREERTOS.Queues01=MessageQueue,16,uint32_t,0,Dynamic,NULL,NULL
-FREERTOS.Tasks01=LEDcontrol,40,128,LEDControlEntry,Default,NULL,Dynamic,NULL,NULL;ScreenRefresh,40,128,ScreenRefreshEntry,Default,NULL,Dynamic,NULL,NULL;StateMachine,48,128,StateMachineEntry,Default,NULL,Dynamic,NULL,NULL;AttitudeControl,24,128,AttitudeControlEntry,Default,NULL,Dynamic,NULL,NULL;StepControl,40,128,StepControlEntry,Default,NULL,Dynamic,NULL,NULL;SerialOutput,8,128,SerialOutputEntry,Default,NULL,Dynamic,NULL,NULL
+FREERTOS.Tasks01=LEDcontrol,24,128,LEDControlEntry,Default,NULL,Dynamic,NULL,NULL;ScreenRefresh,24,128,ScreenRefreshEntry,Default,NULL,Dynamic,NULL,NULL;StateMachine,24,128,StateMachineEntry,Default,NULL,Dynamic,NULL,NULL;AttitudeControl,24,128,AttitudeControlEntry,Default,NULL,Dynamic,NULL,NULL;StepControl,24,128,StepControlEntry,Default,NULL,Dynamic,NULL,NULL;SerialOutput,24,128,SerialOutputEntry,Default,NULL,Dynamic,NULL,NULL
 File.Version=6
 GPIO.groupedBy=
 I2C1.IPParameters=Timing
