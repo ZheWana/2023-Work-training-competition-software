@@ -18,7 +18,7 @@
 
 /*********************  Config Option Begin  ********************/
 
-#define AutoInitBuffer (1)
+#define AutoInitBuffer (0)
 #define AcclerateCurve (Curve_Trapezoidal)
 #define BufferSize (512)
 
