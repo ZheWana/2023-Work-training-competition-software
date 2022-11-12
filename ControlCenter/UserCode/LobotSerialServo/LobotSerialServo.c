@@ -90,45 +90,45 @@ void LobotSerialServoLoad(uint8_t id) {
     LobotSerialWrite(buf, 7);
 }
 
-int LobotSerialServoReadPosition(uint8_t id) {
-    int ret;
-    uint8_t buf[6];
-
-    buf[0] = buf[1] = LOBOT_SERVO_FRAME_HEADER;
-    buf[2] = id;
-    buf[3] = 3;
-    buf[4] = LOBOT_SERVO_POS_READ;
-    buf[5] = LobotCheckSum(buf);
-
-    LobotSerialWrite(buf, 6);
-
-    ret = LobotSerialMsgHandle();
-    return ret;
-}
-
-int LobotSerialMsgHandle(void) {
-    int count = 50000;
-    uint8_t cmd;
-    int ret;
-
-    while (!isRxCompleted()) {
-        count--;
-        if (count < 0)
-            return -2048;
-    }
-
-    if (LobotCheckSum(LobotRxBuf) != LobotRxBuf[LobotRxBuf[3] + 2]) {
-        return -2049;
-    }
-
-    cmd = LobotRxBuf[4];
-    switch (cmd) {
-        case LOBOT_SERVO_POS_READ:
-            ret = (int) BYTE_TO_HW(LobotRxBuf[6], LobotRxBuf[5]);
-            return ret;
-        default:
-            break;
-    }
-    return 0;
-}
+//int LobotSerialServoReadPosition(uint8_t id) {
+//    int ret;
+//    uint8_t buf[6];
+//
+//    buf[0] = buf[1] = LOBOT_SERVO_FRAME_HEADER;
+//    buf[2] = id;
+//    buf[3] = 3;
+//    buf[4] = LOBOT_SERVO_POS_READ;
+//    buf[5] = LobotCheckSum(buf);
+//
+//    LobotSerialWrite(buf, 6);
+//
+//    ret = LobotSerialMsgHandle();
+//    return ret;
+//}
+//
+//int LobotSerialMsgHandle(void) {
+//    int count = 50000;
+//    uint8_t cmd;
+//    int ret;
+//
+//    while (!isRxCompleted()) {
+//        count--;
+//        if (count < 0)
+//            return -2048;
+//    }
+//
+//    if (LobotCheckSum(LobotRxBuf) != LobotRxBuf[LobotRxBuf[3] + 2]) {
+//        return -2049;
+//    }
+//
+//    cmd = LobotRxBuf[4];
+//    switch (cmd) {
+//        case LOBOT_SERVO_POS_READ:
+//            ret = (int) BYTE_TO_HW(LobotRxBuf[6], LobotRxBuf[5]);
+//            return ret;
+//        default:
+//            break;
+//    }
+//    return 0;
+//}
 
