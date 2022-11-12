@@ -10,10 +10,20 @@
 #include "stdint.h"
 #include "pid.h"
 
+#define ToDig(rad) (rad * 57.295779513082320876798154814105)
+#define ToRad(dig) (dig * 0.01745329251994329576923690768489)
+#ifndef M_PI
+#define M_PI 3.1415926535897932384626433832795
+#endif
+
 typedef struct CarControlBlock {
     // 状态数据
-    float x, y;
+    float curX, curY;
+    float aimX, aimY;
     float yaw;// 弧度制
+    float initYawOffset;
+
+    const float unitSpeed;
 
     // 存储三色物块抓取和放置顺序
     uint8_t order[3];
@@ -51,5 +61,8 @@ typedef struct CarControlBlock {
 } CCB_Typedef;
 
 extern CCB_Typedef CarInfo;
+
+void Speed2MotorConverter(float vx, float vy,
+                          float *m1Speed, float *m2Speed, float *m3Speed, float *m4Speed);
 
 #endif //CONTROLCENTER_UTILS_H

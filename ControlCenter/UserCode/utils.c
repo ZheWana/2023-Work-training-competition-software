@@ -8,10 +8,17 @@
 #include "utils.h"
 #include "tim.h"
 #include "CommonKey/comKey.h"
+#include "st7735.h"
 
-void RunMainState(void) {
+void __RunMainState(void) {
     switch (CarInfo.mainState) {
         case mStart:
+            // TODO:
+            //  升降电机初始化
+            //  按键初始化yaw坐标系
+
+//            ST7735_Init();
+
             CarInfo.mainState = mScan;
             break;
         case mScan:// 扫描二维码,记录信息
@@ -36,7 +43,7 @@ void RunMainState(void) {
 }
 
 
-void RunFetchState(void) {
+void __RunFetchState(void) {
     if (CarInfo.mainState == mFirstFetch) {
         switch (CarInfo.fetchState) {
             case fStart:
@@ -58,7 +65,7 @@ void RunFetchState(void) {
     }
 }
 
-void RunDropState(void) {
+void __RunDropState(void) {
     if (CarInfo.mainState == mFirstDrop) {
         switch (CarInfo.dropState) {
             case dStart:
@@ -84,11 +91,18 @@ CCB_Typedef CarInfo = {
         .mainState = mStart,
         .fetchState = fStart,
         .dropState = dStart,
+        .RunMainState = __RunMainState,
+        .RunFetchState = __RunFetchState,
+        .RunDropState = __RunDropState,
         .aPidPeriod = 50,
-        .RunMainState = RunMainState,
-        .RunFetchState = RunFetchState,
-        .RunDropState = RunDropState
+        .unitSpeed = 100,
 };
+
+
+void Speed2MotorConverter(float vx, float vy,
+                          float *m1Speed, float *m2Speed, float *m3Speed, float *m4Speed) {
+    // TODO: Complete converter
+}
 
 void HAL_TIM_PWM_PulseFinishedHalfCpltCallback(TIM_HandleTypeDef *htim) {
     if (htim->Instance == TIM3) {
