@@ -7,6 +7,7 @@
 #include "./ST7735/Inc/st7735.h"
 #include "./Compass/QMC5883L.h"
 #include "CommonKey/comKey.h"
+#include "LogConfig.h"
 #include <stddef.h>
 #include "utils.h"
 #include "tim.h"
@@ -17,7 +18,7 @@ void __RunMainState(void) {
         case mStart:
             // TODO:
             //  升降电机初始化
-            //  按键初始化yaw坐标系
+            //  按键按下初始化yaw坐标系
             // Hard Init
             QMC5883_Init();
 //            ST7735_Init();
