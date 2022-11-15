@@ -21,7 +21,10 @@ typedef struct CarControlBlock {
     float curX, curY;
     float aimX, aimY;
     float yaw;// 弧度制
+
+    // 矫正航向角坐标系数据
     float initYawOffset;
+    uint8_t isYawInited: 1;
 
     const float unitSpeed;
 
