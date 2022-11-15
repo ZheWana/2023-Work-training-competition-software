@@ -16,9 +16,9 @@
 #if !LOG_LEVEL_NONE
 #define LOG_LEVEL_DATA      1
 #define LOG_LEVEL_DEBUG     2
-//#define LOG_LEVEL_INFO      3
-#define LOG_LEVEL_WARN      4
-#define LOG_LEVEL_ERROR     5
+#define LOG_LEVEL_INFO      3
+//#define LOG_LEVEL_WARN      4
+//#define LOG_LEVEL_ERROR     5
 #endif
 /////////////////////////////////////////    Log Config    /////////////////////////////////////////////
 #ifndef _PRINTF_H_
@@ -36,6 +36,11 @@ int UART_printf(const char *fmt, ...);
 #endif//DeviceFamily_TM4C12x
 #endif
 
+#ifdef LOG_LEVEL_DATA
+#define DataConLog(__condition, __dbgmsg, ...) do{if(__condition){DataLog(__dbgmsg,##__VA_ARGS__);}}while(0)
+#else
+#define DataConLog(...) do{}while(0)
+#endif
 #ifdef LOG_LEVEL_DEBUG
 #define DebugConLog(__condition, __dbgmsg, ...) do{if(__condition){DebugLog(__dbgmsg,##__VA_ARGS__);}}while(0)
 #else
@@ -76,12 +81,12 @@ int UART_printf(const char *fmt, ...);
 #define InfoLog(...) do{}while(0)
 #endif//(LOG_LEVEL_INFO)
 #if (LOG_LEVEL_WARN)
-#define WarnLog(__warnmsg, ...) printf("[WARNING]["__FILE__"]\\n""\n[Func:%s][Line:%d]:"__warnmsg,__FUNCTION__,__LINE__,##__VA_ARGS__)
+#define WarnLog(__warnmsg, ...) printf("[WARNING]["__FILE__"]""[Func:%s][Line:%d]:"__warnmsg"\n",__FUNCTION__,__LINE__,##__VA_ARGS__)
 #else
 #define WarnLog(...) do{}while(0)
 #endif//(LOG_LEVEL_WARN)
 #if (LOG_LEVEL_ERROR)
-#define ErrorLog(__errmsg, ...) printf("[ERROR]["__FILE__"]\\n""\n[Func:%s][Line:%d]:"__errmsg,__FUNCTION__,__LINE__,##__VA_ARGS__)
+#define ErrorLog(__errmsg, ...) printf("[ERROR]["__FILE__"]""[Func:%s][Line:%d]:"__errmsg"\n",__FUNCTION__,__LINE__,##__VA_ARGS__)
 #else
 #define ErrorLog(...) do{}while(0)
 #endif//(LOG_LEVEL_ERROR)

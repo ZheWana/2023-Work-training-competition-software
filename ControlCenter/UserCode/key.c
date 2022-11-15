@@ -27,15 +27,10 @@ void ComKey_SyncValue(comkey_t *key) {
 }
 
 void KeyInit(void) {
-    for (int i = 0; i < 3; i++) { ComKey_Init(&keys[i], 1); }
+    for (int i = 0; i < 3; i++) { ComKey_Init(&keys[i], Key_PollingPeriod); }
 }
 
 void ComKey_FirstLongTriggerCallback(comkey_t *key) {
-//    for (int i = 0; i < 3; i++) {
-//        if (key == &keys[i]) {
-//            DebugLog("key%d", i);
-//        }
-//    }
 }
 
 void ComKey_MultipleClickCallback(comkey_t *key) {

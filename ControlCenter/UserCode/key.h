@@ -7,6 +7,8 @@
 #ifndef CONTROLCENTER_KEY_H
 #define CONTROLCENTER_KEY_H
 
+#include "main.h"
+
 void KeyInit(void);
 
 #endif //CONTROLCENTER_KEY_H
