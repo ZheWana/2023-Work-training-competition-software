@@ -54,7 +54,7 @@ include_directories(Core/Inc Drivers/STM32H7xx_HAL_Driver/Inc Drivers/STM32H7xx_
                                 UserCode/74HC165
                                 UserCode/LobotSerialServo
                                 UserCode/PID
-                                UserCode/ST7735/Inc)
+                                UserCode/ST7735)
 
 add_definitions(-DDEBUG -DUSE_HAL_DRIVER -DSTM32H750xx)
 

@@ -1,11 +1,3 @@
-/*
- * st7735.h
- *
- *  Created on: 16 徨�. 2019 �.
- *      Author: Andriy Honcharenko
- *        Blog: https://stm32withoutfear.blogspot.com
- */
-
 #ifndef __ST7735_H__
 #define __ST7735_H__
 
@@ -111,22 +103,32 @@ extern SPI_HandleTypeDef ST7735_SPI_PORT;
 #define ST7735_GMCTRN1 0xE1
 
 // Color definitions
-#define	ST7735_BLACK   0x0000
-#define	ST7735_BLUE    0x001F
-#define	ST7735_RED     0xF800
-#define	ST7735_GREEN   0x07E0
-#define ST7735_CYAN    0x07FF
-#define ST7735_MAGENTA 0xF81F
-#define ST7735_YELLOW  0xFFE0
-#define ST7735_WHITE   0xFFFF
+#define WHITE 0xFFFF
+#define BLACK 0x0000
+#define BLUE 0x001F
+#define RED 0xF800
+#define MAGENTA 0xF81F
+#define GREEN 0x07E0
+#define CYAN 0x7FFF
+#define YELLOW 0xFFE0
+#define GRAY 0X18C3
+#define BRED 0XF81F
+#define GRED 0XFFE0
+#define GBLUE 0X07FF
+#define BROWN 0XBC40
+#define BRRED 0XFC07
+#define DARKBLUE 0X01CF
+#define LIGHTBLUE 0X7D7C
+#define GRAYBLUE 0X5458
 
 void ST7735_Backlight_On(void);
 void ST7735_Backlight_Off(void);
 void ST7735_Init(void);
 void ST7735_DrawPixel(uint16_t x, uint16_t y, uint16_t color);
-void ST7735_DrawString(uint16_t x, uint16_t y, const char* str, FontDef font, uint16_t color, uint16_t bgcolor);
 void ST7735_FillRectangle(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color);
+void ST7735_FillRectangle_Fast(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t color);
 void ST7735_FillScreen(uint16_t color);
+void ST7735_FillScreen_Fast(uint16_t color);
 void ST7735_DrawImage(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const uint16_t* data);
 void ST7735_InvertColors(bool invert);
 void ST7735_DrawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color);
@@ -144,6 +146,17 @@ void ST7735_DrawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t co
 void ST7735_DrawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color);
 void ST7735_DrawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color);
 void ST7735_SetRotation(uint8_t m);
+
+void ST7735_GPIO_Init(void);
+void ST7735_WriteCommand(uint8_t cmd);
+void ST7735_WriteData(uint8_t* buff, size_t buff_size);
+void ST7735_ExecuteCommandList(const uint8_t *addr);
+void ST7735_SetAddressWindow(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1);
+void ST7735_WriteChar(uint16_t x, uint16_t y, char ch, FontDef font, uint16_t color, uint16_t bgcolor);
+void ST7735_WriteChar_Fast(uint16_t x, uint16_t y, char ch, FontDef font, uint16_t color, uint16_t bgcolor);
+void ST7735_DrawString(uint16_t x, uint16_t y, const char* str, FontDef font, uint16_t color, uint16_t bgcolor);
+void ST7735_DrawString_Fast(uint16_t x, uint16_t y, const char *str, FontDef font, uint16_t color, uint16_t bgcolor);
+
 uint8_t ST7735_GetRotation(void);
 int16_t ST7735_GetHeight(void);
 int16_t ST7735_GetWidth(void);
