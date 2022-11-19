@@ -28,7 +28,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "LobotSerialServo/LobotSerialServo.h"
-#include "ST7735/Inc/st7735.h"
+#include "ST7735/st7735.h"
 #include "74HC165/74HC165.h"
 #include "printf.h"
 /* USER CODE END Includes */
