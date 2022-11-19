@@ -314,7 +314,7 @@
           </ArmAdsMisc>
           <Cads>
             <interw>1</interw>
-            <Optim>2</Optim>
+            <Optim>1</Optim>
             <oTime>0</oTime>
             <SplitLS>0</SplitLS>
             <OneElfS>1</OneElfS>
@@ -677,12 +677,12 @@
             <File>
               <FileName>fonts.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\UserCode\ST7735\Src\fonts.c</FilePath>
+              <FilePath>..\UserCode\ST7735\fonts.c</FilePath>
             </File>
             <File>
               <FileName>st7735.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\UserCode\ST7735\Src\st7735.c</FilePath>
+              <FilePath>..\UserCode\ST7735\st7735.c</FilePath>
             </File>
           </Files>
         </Group>
