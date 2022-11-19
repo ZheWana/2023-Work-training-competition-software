@@ -32,10 +32,11 @@
 #include "stdlib.h"
 #include "PID/pid.h"
 #include "LogConfig.h"
+#include "LobotSerialServo/LobotSerialServo.h"
 #include "74HC165/74HC165.h"
 #include "Compass/QMC5883L.h"
 #include "CommonKey/comKey.h"
-#include "ST7735/Inc/st7735.h"
+#include "ST7735/st7735.h"
 #include "DebugLogger/Debug.h"
 /* USER CODE END Includes */
 
@@ -56,7 +57,6 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
-extern CCB_Typedef CarInfo;
 /* USER CODE END Variables */
 /* Definitions for LEDcontrol */
 osThreadId_t LEDcontrolHandle;
@@ -69,7 +69,7 @@ const osThreadAttr_t LEDcontrol_attributes = {
 osThreadId_t ScreenRefreshHandle;
 const osThreadAttr_t ScreenRefresh_attributes = {
         .name = "ScreenRefresh",
-        .stack_size = 128 * 4,
+        .stack_size = 256 * 4,
         .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for StateMachine */
@@ -90,7 +90,7 @@ const osThreadAttr_t AttitudeControl_attributes = {
 osThreadId_t StepControlHandle;
 const osThreadAttr_t StepControl_attributes = {
         .name = "StepControl",
-        .stack_size = 128 * 4,
+        .stack_size = 256 * 4,
         .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for SerialOutput */
@@ -266,7 +266,6 @@ void ScreenRefreshEntry(void *argument) {
     /* USER CODE BEGIN ScreenRefreshEntry */
     /* Infinite loop */
     for (;;) {
-        osDelay(1);
     }
     /* USER CODE END ScreenRefreshEntry */
 }
@@ -355,18 +354,32 @@ void StepControlEntry(void *argument) {
     /* USER CODE BEGIN StepControlEntry */
     /* Infinite loop */
     for (;;) {
-        static uint8_t buff[16] = {[0] = 0x55, [15] = 0xAA};
+        uint8_t buff[16] = {[0] = 0x55, [15] = 0xAA};
+        enum cmdList {
+            Reset = 0x0, Init, DriveAsStep, Abort, DriveAsMotor,
+        } cmd;
 
-        if (CarInfo.aimX != CarInfo.curX || CarInfo.aimY != CarInfo.curY) {
-            float vx = CarInfo.aimX - CarInfo.curX, vy = CarInfo.aimY - CarInfo.curY,
-                    freq1, freq2, freq3, freq4;
+        if (1) {//CarInfo.aimX != CarInfo.curX || CarInfo.aimY != CarInfo.curY) {
+            float vx = CarInfo.aimX - CarInfo.curX, vy = CarInfo.aimY - CarInfo.curY;
+            float freq[4];
 
 
-            Speed2MotorConverter(vx, vy, &freq1, &freq2, &freq3, &freq4);
+            Speed2MotorConverter(vx, vy, &freq[0], &freq[1], &freq[2], &freq[3]);
             // TODO:
             //  Add aPid data to freq
-            //  Handle buffer data
-            //  Send buffer to driver
+            buff[1] = DriveAsMotor;
+            for (int i = 0; i < 4; i++) {
+                buff[2] = i;
+                if (freq[i] < 0) {
+                    freq[i] = -freq[i];
+                    buff[7] = 0;
+                } else {
+                    buff[7] = 1;
+                }
+                *(uint32_t *) (buff + 3) = *(uint32_t *) &freq[i];
+                HAL_SPI_Transmit(&hspi1, (uint8_t *) buff, 16, HAL_MAX_DELAY);
+            }
+
         }
     }
     /* USER CODE END StepControlEntry */
