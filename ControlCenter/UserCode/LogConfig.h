@@ -14,9 +14,9 @@
 
 //#define DO_NOT_LOG_ALL
 #ifndef DO_NOT_LOG_ALL
-#define LogAboutQMC5883_GetData         (1)
-#define LogAboutQMC5883_CordanateInit   (1)
-#define LogAboutInfrared                (1)
+#define LogAboutQMC5883_GetData         (0)
+#define LogAboutQMC5883_CordanateInit   (0)
+#define LogAboutInfrared                (0)
 #endif//DO_NOT_LOG_ALL
 
 
