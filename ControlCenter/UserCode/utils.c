@@ -4,10 +4,11 @@
  * @brief 
  * @date 2022/11/8
   */
-#include "./ST7735/Inc/st7735.h"
+#include "./ST7735/st7735.h"
 #include "./Compass/QMC5883L.h"
 #include "CommonKey/comKey.h"
 #include "LogConfig.h"
+#include "cmsis_os.h"
 #include <stddef.h>
 #include "utils.h"
 #include "tim.h"
@@ -18,10 +19,27 @@ void __RunMainState(void) {
         case mStart:
             // TODO:
             //  升降电机初始化
+            //  机械臂方向初始化
+            //
+
             //  按键按下初始化yaw坐标系
             // Hard Init
             QMC5883_Init();
-//            ST7735_Init();
+            ST7735_Backlight_On();
+            ST7735_Init();
+            ST7735_FillScreen(WHITE);
+            osDelay(100);
+            ST7735_FillScreen(GREEN);
+            osDelay(100);
+            ST7735_FillScreen(BLUE);
+            osDelay(100);
+            ST7735_FillScreen_Fast(MAGENTA);
+            osDelay(100);
+            ST7735_FillScreen_Fast(CYAN);
+            osDelay(100);
+            ST7735_FillScreen_Fast(YELLOW);
+            osDelay(100);
+
 
             // Soft Init
             KeyInit();

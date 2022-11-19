@@ -11,7 +11,7 @@
 #include "usart.h"
 
 // Transplant uart for stm32
-#define UART_HANDLE huart4
+#define UART_HANDLE huart8
 
 void uartWriteBuf(uint8_t *pData, int len) {
     HAL_UART_Transmit(&UART_HANDLE, pData, len, HAL_MAX_DELAY);
