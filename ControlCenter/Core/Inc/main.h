@@ -75,14 +75,20 @@ void Error_Handler(void);
 #define LED_Blue_GPIO_Port GPIOD
 #define LED_White_Pin GPIO_PIN_15
 #define LED_White_GPIO_Port GPIOD
+#define KEY2_Pin GPIO_PIN_11
+#define KEY2_GPIO_Port GPIOA
+#define KEY1_Pin GPIO_PIN_15
+#define KEY1_GPIO_Port GPIOA
+#define KEY0_Pin GPIO_PIN_11
+#define KEY0_GPIO_Port GPIOC
 #define ST7735_RES_Pin GPIO_PIN_0
 #define ST7735_RES_GPIO_Port GPIOD
 #define ST7735_DC_Pin GPIO_PIN_1
 #define ST7735_DC_GPIO_Port GPIOD
 #define ST7735_CS_Pin GPIO_PIN_2
 #define ST7735_CS_GPIO_Port GPIOD
-#define ST7735_BLK_Pin GPIO_PIN_3
-#define ST7735_BLK_GPIO_Port GPIOD
+#define ST7735_BL_Pin GPIO_PIN_3
+#define ST7735_BL_GPIO_Port GPIOD
 /* USER CODE BEGIN Private defines */
 #define Key_PollingPeriod       (10)
 #define UC_PollingPeriod        (200)
