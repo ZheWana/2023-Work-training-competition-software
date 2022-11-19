@@ -141,6 +141,7 @@ void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef* hspi)
             useDec = Buff[8];
 
             // init
+            dir = (motorID % 2) ? dir, -dir;
             Step_Prefill(&steplist[motorID], dir, StepNum, Decelerate_USE);
             HAL_TIM_PWM_PulseFinishedCallback(steplist[motorID].phtim);
             break;
@@ -163,7 +164,9 @@ void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef* hspi)
                 }
             }
             dir = Buff[7];
+
             // Get PSC
+            dir = (motorID % 2) ? dir, -dir;
             steplist[motorID].phtim->Instance->PSC = (uint16_t)((RCC_MAX_FREQUENCY / (steplist[motorID].phtim->Instance->ARR + 1)) / freq - 1);
             if (steplist[motorID].useAsMotor == 0) {
                 HAL_TIM_PWM_Start(steplist[motorID].phtim, steplist[motorID].channel);
@@ -187,6 +190,8 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef* htim)
                 Step_BufferUsed(&steplist[i]);
             } else if (steplist[i].state == Stop) {
                 HAL_TIM_PWM_Stop_DMA(steplist[i].phtim, steplist[i].channel);
+                uint8_t data = 0x5A;
+                HAL_SPI_Transmit(&hspi1, &data, sizeof(data), HAL_MAX_DELAY);
                 Step_Unlock(&steplist[i]);
             }
 
@@ -256,20 +261,20 @@ int main(void)
 
     // TIM2->CCR1 = 10;
 
-    // HAL_SPI_Receive_DMA(&hspi1, Buff, 16);
+    HAL_SPI_Receive_DMA(&hspi1, Buff, 16);
     int i;
-//    i = 3;
-//    Step_Prefill(&steplist[i], UINT32_MAX, 0, Decelerate_USE);
-//    HAL_TIM_PWM_PulseFinishedCallback(steplist[i].phtim);
-//    i = 2;
-//    Step_Prefill(&steplist[i], UINT32_MAX, 1, Decelerate_USE);
-//    HAL_TIM_PWM_PulseFinishedCallback(steplist[i].phtim);
-//    i = 1;
-//    Step_Prefill(&steplist[i], UINT32_MAX, 0, Decelerate_USE);
-//    HAL_TIM_PWM_PulseFinishedCallback(steplist[i].phtim);
-//    i = 0;
-//    Step_Prefill(&steplist[i], UINT32_MAX, 1, Decelerate_USE);
-//    HAL_TIM_PWM_PulseFinishedCallback(steplist[i].phtim);
+    //    i = 3;
+    //    Step_Prefill(&steplist[i], UINT32_MAX, 0, Decelerate_USE);
+    //    HAL_TIM_PWM_PulseFinishedCallback(steplist[i].phtim);
+    //    i = 2;
+    //    Step_Prefill(&steplist[i], UINT32_MAX, 1, Decelerate_USE);
+    //    HAL_TIM_PWM_PulseFinishedCallback(steplist[i].phtim);
+    //    i = 1;
+    //    Step_Prefill(&steplist[i], UINT32_MAX, 0, Decelerate_USE);
+    //    HAL_TIM_PWM_PulseFinishedCallback(steplist[i].phtim);
+    //    i = 0;
+    //    Step_Prefill(&steplist[i], UINT32_MAX, 1, Decelerate_USE);
+    //    HAL_TIM_PWM_PulseFinishedCallback(steplist[i].phtim);
 
     /* USER CODE END 2 */
 
