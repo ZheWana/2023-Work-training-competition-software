@@ -21,6 +21,7 @@ typedef struct CarControlBlock {
     float curX, curY;
     float aimX, aimY;
     float yaw;// 弧度制
+    float vx, vy;
 
     // 矫正航向角坐标系数据
     float initYawOffset;
@@ -36,7 +37,7 @@ typedef struct CarControlBlock {
 
     // 状态机状态枚举
     enum mainState {// 主状态机
-        mStart, mScan, mFirstFetch, mFirstDrop, mEnd
+        mStart, mScan, mIdentify, mFirstFetch, mFirstDrop, mEnd
     } mainState;
 
     enum fetchState {// 抓取从状态机
@@ -67,5 +68,23 @@ extern CCB_Typedef CarInfo;
 
 void Speed2MotorConverter(float vx, float vy,
                           float *m1Speed, float *m2Speed, float *m3Speed, float *m4Speed);
+
+int Step_MoveAsMotor(uint8_t motorID, float freq);
+
+int Step_SetSpeed(uint8_t motorID, uint32_t startSpeed, uint32_t finalSpeed, uint32_t accTime);
+
+int Step_MoveSteps(uint8_t motorID, uint8_t dir, uint8_t useDec, uint32_t stepNum);
+
+void Step_Abort(uint8_t motorID);
+
+void SupportRotation(float position, uint32_t time);
+
+void ClipRotition(float position, uint32_t time);
+
+void MoveX(int64_t steps);
+
+void MoveY(int64_t steps);
+
+void Rotate(int64_t steps);
 
 #endif //CONTROLCENTER_UTILS_H
