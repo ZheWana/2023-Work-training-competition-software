@@ -32,10 +32,11 @@
 #include "stdlib.h"
 #include "PID/pid.h"
 #include "LogConfig.h"
+#include "LobotSerialServo/LobotSerialServo.h"
 #include "74HC165/74HC165.h"
 #include "Compass/QMC5883L.h"
 #include "CommonKey/comKey.h"
-#include "ST7735/Inc/st7735.h"
+#include "ST7735-HAL/st7735.h"
 #include "DebugLogger/Debug.h"
 /* USER CODE END Includes */
 
@@ -56,7 +57,6 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
-extern CCB_Typedef CarInfo;
 /* USER CODE END Variables */
 /* Definitions for LEDcontrol */
 osThreadId_t LEDcontrolHandle;
@@ -69,14 +69,14 @@ const osThreadAttr_t LEDcontrol_attributes = {
 osThreadId_t ScreenRefreshHandle;
 const osThreadAttr_t ScreenRefresh_attributes = {
         .name = "ScreenRefresh",
-        .stack_size = 128 * 4,
+        .stack_size = 256 * 4,
         .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for StateMachine */
 osThreadId_t StateMachineHandle;
 const osThreadAttr_t StateMachine_attributes = {
         .name = "StateMachine",
-        .stack_size = 256 * 4,
+        .stack_size = 512 * 4,
         .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for AttitudeControl */
@@ -90,7 +90,7 @@ const osThreadAttr_t AttitudeControl_attributes = {
 osThreadId_t StepControlHandle;
 const osThreadAttr_t StepControl_attributes = {
         .name = "StepControl",
-        .stack_size = 128 * 4,
+        .stack_size = 256 * 4,
         .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for SerialOutput */
@@ -266,7 +266,7 @@ void ScreenRefreshEntry(void *argument) {
     /* USER CODE BEGIN ScreenRefreshEntry */
     /* Infinite loop */
     for (;;) {
-        osDelay(1);
+        SupportRotation(0, 1000);
     }
     /* USER CODE END ScreenRefreshEntry */
 }
@@ -306,12 +306,8 @@ void AttitudeControlEntry(void *argument) {
             LogStart(LogAboutQMC5883_GetData);
             ErrorConLog(res == -1, "QMC5883_GetData:IIC ERROR");
             LogEnd(LogAboutQMC5883_GetData);
-            hmc.Mx += 0;
-            hmc.My += 0;
+//            printf("no:%f,%f,%f\n", hmc.Mx, hmc.My, atan2f(hmc.Mx, hmc.My));
 
-            // Rotating coordinate system
-            hmc.Mx = hmc.Mx * cosf(CarInfo.initYawOffset) - hmc.My * sinf(CarInfo.initYawOffset);
-            hmc.My = hmc.Mx * sinf(CarInfo.initYawOffset) + hmc.My * cosf(CarInfo.initYawOffset);
 
             if (!CarInfo.isYawInited) {//Init coordinate system
                 CarInfo.isYawInited = 1;
@@ -322,6 +318,7 @@ void AttitudeControlEntry(void *argument) {
                     if (res != 0)break;
                     sumX += hmc.Mx;
                     sumY += hmc.My;
+                    printf("init:%f,%f,%f\n", hmc.Mx, hmc.My, atan2f(hmc.Mx, hmc.My));
                 }
                 CarInfo.initYawOffset = atan2f(sumX * 0.01f, sumY * 0.01f);
                 LogStart(LogAboutQMC5883_CordanateInit);
@@ -330,7 +327,19 @@ void AttitudeControlEntry(void *argument) {
                 LogEnd(LogAboutQMC5883_CordanateInit);
             } else {// PID close loop
                 CarInfo.aPid.ctr.aim = 0;
-                CarInfo.aPid.ctr.cur = CarInfo.yaw = atan2f(hmc.Mx, hmc.My);
+
+                // Rotating coordinate system
+                CarInfo.yaw = atan2f(hmc.Mx, hmc.My);
+                CarInfo.yaw -= CarInfo.initYawOffset;
+                if (CarInfo.yaw < -M_PI) {
+                    CarInfo.yaw += (float) (2.0 * M_PI);
+                } else if (CarInfo.yaw > M_PI) {
+                    CarInfo.yaw -= (float) (2.0 * M_PI);
+                }
+                CarInfo.aPid.ctr.cur = CarInfo.yaw;
+
+                printf("offset:%f,%f,%f,%f,%f\n", CarInfo.aPid.ctr.cur, CarInfo.aPid.ctr.aim, ToDig(CarInfo.yaw),
+                       CarInfo.yaw, CarInfo.aPidOut);
                 WarnConLog(res == 0 && hmc.Mx == 0 && hmc.My == 0, "QMC5883_GetData:All Zero Data");
                 osSemaphoreAcquire(bGetaPidOutSemHandle, UINT32_MAX);
                 CarInfo.aPidOut = PID_RealizeForAngle(&CarInfo.aPid);// Use radian system
@@ -339,7 +348,7 @@ void AttitudeControlEntry(void *argument) {
             }
         }
 
-        osDelayUntil(CarInfo.aPidPeriod);
+        osDelay(CarInfo.aPidPeriod);
     }
     /* USER CODE END AttitudeControlEntry */
 }
@@ -355,18 +364,30 @@ void StepControlEntry(void *argument) {
     /* USER CODE BEGIN StepControlEntry */
     /* Infinite loop */
     for (;;) {
-        static uint8_t buff[16] = {[0] = 0x55, [15] = 0xAA};
+        float freq[4] = {0};
+        static float curAimx, curAimy;
+        if (curAimx != CarInfo.aimX) {
+            curAimx = CarInfo.aimX;
+            CarInfo.vx = (CarInfo.aimX - CarInfo.curX) * CarInfo.unitSpeed;
+        }
+        if (curAimy != CarInfo.aimY) {
+            curAimy = CarInfo.aimY;
+            CarInfo.vy = (CarInfo.aimY - CarInfo.curY) * CarInfo.unitSpeed;
+        }
+        CarInfo.vx = CarInfo.aimX == CarInfo.curX ? 0 : CarInfo.vx;
+        CarInfo.vy = CarInfo.aimY == CarInfo.curY ? 0 : CarInfo.vy;
 
-        if (CarInfo.aimX != CarInfo.curX || CarInfo.aimY != CarInfo.curY) {
-            float vx = CarInfo.aimX - CarInfo.curX, vy = CarInfo.aimY - CarInfo.curY,
-                    freq1, freq2, freq3, freq4;
+        // 顺时针旋转    1  0  1  0
+        // 逆时针旋转    0  1  0  1
 
-
-            Speed2MotorConverter(vx, vy, &freq1, &freq2, &freq3, &freq4);
-            // TODO:
-            //  Add aPid data to freq
-            //  Handle buffer data
-            //  Send buffer to driver
+        Speed2MotorConverter(CarInfo.vx, CarInfo.vy, &freq[0], &freq[1], &freq[2], &freq[3]);
+        freq[0] -= CarInfo.aPidOut;
+        freq[1] += CarInfo.aPidOut;
+        freq[2] -= CarInfo.aPidOut;
+        freq[3] += CarInfo.aPidOut;
+        for (int i = 0; i < 4; i++) {
+//            Step_MoveAsMotor(i, freq[i]);
+            osDelay(1);
         }
     }
     /* USER CODE END StepControlEntry */
@@ -401,10 +422,11 @@ void KeyInputEntry(void *argument) {
     /* Infinite loop */
     for (;;) {
         ComKey_Handler();
-        osDelayUntil(Key_PollingPeriod);
+        osDelay(Key_PollingPeriod);
     }
     /* USER CODE END KeyInputEntry */
 }
+
 
 /* USER CODE BEGIN Header_UpdateCoordinatesEntry */
 /**
@@ -413,111 +435,99 @@ void KeyInputEntry(void *argument) {
 * @retval None
 */
 /* USER CODE END Header_UpdateCoordinatesEntry */
+// Update Coordinates Helper struct instance
+//static
+struct ucHelper {
+    uint16_t sData;
+    uint8_t sGroup[4];
+    enum groupName {
+        gUp = 0, gRight, gDown, gLeft
+    } groupName: 2;
+
+    // State machines and Timers for each group
+    enum state {
+        Standby, ForwardRecord, BackRecord, EndCycle
+    } stateList[4];
+
+    uint8_t recordList[4];
+} ucHelper;
+
 void UpdateCoordinatesEntry(void *argument) {
     /* USER CODE BEGIN UpdateCoordinatesEntry */
     /* Infinite loop */
     for (;;) {
-        // Update Coordinates Helper struct instance
-        static struct ucHelper {
-            uint16_t sData;
-            uint8_t sGroup[4];
-            enum groupName {
-                gUp = 0, gRight, gDown, gLeft
-            } groupName: 2;
 
-            // State machines and Timers for each group
-            enum state {
-                Start,
-                FirstOn, SecondOn, ThirdOn, ForthOn, EndOn,
-                FirstBack, SecondBack, ThirdBack, ForthBack, EndBack
-            } stateList[4];
-            uint32_t timerList[4];
+        float *handledData = NULL;
+        float addItem;
 
-            // Sensor position for each group
-            const enum {
-                Step1 = 0b0001000, Step2 = 0b0010100, Step3 = 0b0100010, Step4 = 0b1000001
-            } Steps;
-        } ucHelper;
-        static float *handledData;
-        float addItem = 1;
-
+        // TODO:
+        //  Get HC165 Data
         HC165_Get_Data(&ucHelper.sData);
-        ucHelper.sGroup[gUp] = ((0x7F << 4) & ucHelper.sData) >> 4;                                      // Head at 9
-        ucHelper.sGroup[gRight] = ((0x7F << 8) & ucHelper.sData) >> 8;                                   // Head at 5
-        ucHelper.sGroup[gDown] = (0xF << 12 & ucHelper.sData) >> 12 | ((0x7) & ucHelper.sData) << 4;     // Head at 1
-        ucHelper.sGroup[gLeft] = ((0x7F) & ucHelper.sData);                                              // Head at 13
+        ucHelper.sGroup[gLeft] = ((0x7F << 4) & ucHelper.sData) >> 4;                                      // Head at 9
+        ucHelper.sGroup[gUp] = ((0x7F << 8) & ucHelper.sData) >> 8;                                   // Head at 5
+        ucHelper.sGroup[gRight] = (0xF << 12 & ucHelper.sData) >> 12 | ((0x7) & ucHelper.sData) << 4;     // Head at 1
+        ucHelper.sGroup[gDown] = ((0x7F) & ucHelper.sData);                                              // Head at 13
 
-        if (ucHelper.sData != 0 && ucHelper.sData != UINT16_MAX) {
-            for (int i = 0; i < 4; ++i) {
-                enum state *pState = &ucHelper.stateList[i];
-                uint8_t sGroup = ucHelper.sGroup[i];
-                uint32_t *pTimer = &ucHelper.timerList[i];
-                switch (*pState) {
-                    case Start:
-                        if ((sGroup & Step1) == Step1) {
-                            *pState = FirstOn;
-                            *pTimer = 0;
-                        } else if ((sGroup & Step4) == Step4) {
-                            *pState = FirstBack;
-                            *pTimer = 0;
-                        }
-                        break;
-                    case FirstOn:
-                    case FirstBack:
-                        if ((sGroup & Step2) == Step2 && *pState == FirstOn) {
-                            *pState = SecondOn;
-                            *pTimer = 0;
-                        } else if ((sGroup & Step3) == Step3 && *pState == FirstBack) {
-                            *pState = SecondBack;
-                            *pTimer = 0;
-                        }
-                        break;
-                    case SecondOn:
-                    case SecondBack:
-                        if ((sGroup & Step3) == Step3 && *pState == SecondOn) {
-                            *pState = ThirdOn;
-                            *pTimer = 0;
-                        } else if ((sGroup & Step2) == Step2 && *pState == SecondBack) {
-                            *pState = ThirdBack;
-                            *pTimer = 0;
-                        }
-                        break;
-                    case ThirdOn:
-                    case ThirdBack:
-                        if ((sGroup & Step4) == Step4 && *pState == ThirdOn) {
-                            *pState = ForthOn;
-                            *pTimer = 0;
-                        } else if ((sGroup & Step1) == Step1 && *pState == ThirdBack) {
-                            *pState = ForthBack;
-                            *pTimer = 0;
-                        }
-                        break;
-                    case ForthOn:
-                    case ForthBack:
-                        if ((sGroup & Step4) == 0 && *pState == ForthOn) {
-                            *pState = EndOn;
-                            *pTimer = 0;
-                        } else if ((sGroup & Step1) == 0 && *pState == ForthBack) {
-                            *pState = EndBack;
-                            *pTimer = 0;
-                        }
-                        break;
-                    case EndOn:
-                    case EndBack:
+        for (int i = 0; i < 1; i++) {
+            enum state *pState = &ucHelper.stateList[i];
+            uint8_t sGroup = ucHelper.sGroup[i];
+            uint8_t *record = &ucHelper.recordList[i];
+            switch (*pState) {
+                case Standby:
+                    // Just do nothing
+
+                    if (sGroup & 0b01000001) {
+                        *record |= sGroup;
+                        *pState = BackRecord;
+                    }
+                    if (sGroup & 0b00001000) {
+                        *record |= sGroup;
+                        *pState = ForwardRecord;
+                    }
+                    break;
+                case ForwardRecord:
+                    *record |= sGroup;
+
+                    if ((sGroup & 0b01000001) && ((*record & 0b00111110) == 0)) {
+                        *record = 0;
+                        *pState = Standby;
+                    } else if (*record == 0x7F) {
+                        *record = 0;
+                        addItem = 1;
+
                         handledData = (i % 2) == 0 ? &CarInfo.curX : &CarInfo.curY;
-                        if (*pState == EndBack)addItem *= -1;
                         if (i == gDown || i == gLeft)addItem *= -1;
                         *handledData += addItem;
-                        *pState = Start;
-                        *pTimer = 0;
-                        break;
-                    default:;
-                }
 
-                *pTimer += UC_PollingPeriod;
-                if (*pTimer >= UC_TimerResetPeriod) { *pState = Start; }
+                        *pState = EndCycle;
+                    }
+                    break;
+                case BackRecord:
+                    *record |= sGroup;
+
+                    if ((sGroup & 0b00001000) && ((*record & 0b00111110) == 0)) {
+                        *record = 0;
+                        *pState = Standby;
+                    } else if (*record == 0x7F) {
+                        *record = 0;
+                        addItem = -1;
+
+                        handledData = (i % 2) == 0 ? &CarInfo.curX : &CarInfo.curY;
+                        if (i == gDown || i == gLeft)addItem *= -1;
+                        *handledData += addItem;
+
+                        *pState = EndCycle;
+                    }
+                    break;
+
+                case EndCycle:
+                    if (sGroup == 0) {
+                        *pState = Standby;
+                    }
+                    break;
             }
         }
+//        printf("%f,%f\n", CarInfo.curX, CarInfo.curY);
 
         LogStart(LogAboutInfrared);
         WarnConLog(ucHelper.sData == 0 || ucHelper.sData == UINT16_MAX, "Sensor Data ERROR");
@@ -550,7 +560,7 @@ void UpdateCoordinatesEntry(void *argument) {
         }
         LogEnd(LogAboutInfrared);
 
-        osDelayUntil(UC_PollingPeriod);
+        osDelay(UC_PollingPeriod);
     }
     /* USER CODE END UpdateCoordinatesEntry */
 }

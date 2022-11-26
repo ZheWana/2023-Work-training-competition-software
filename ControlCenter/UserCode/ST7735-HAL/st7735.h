@@ -1,7 +1,7 @@
 /*
  * st7735.h
  *
- *  Created on: 16 еѕЁпїЅ. 2019 пїЅ.
+ *  Created on: 16 бер. 2019 р.
  *      Author: Andriy Honcharenko
  *        Blog: https://stm32withoutfear.blogspot.com
  */

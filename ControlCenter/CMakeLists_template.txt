@@ -53,7 +53,7 @@ include_directories(${includes}
                                 UserCode/74HC165
                                 UserCode/LobotSerialServo
                                 UserCode/PID
-                                UserCode/ST7735/Inc)
+                                UserCode/ST7735)
 
 add_definitions(${defines})
 

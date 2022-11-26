@@ -94,13 +94,14 @@ void Data_ReFormatData(char* buff, int len, char frameHead)
 void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef* hspi)
 {
 
-    uint32_t startSpd = 0, finalSpd = 0, accTime = 0, StepNum = 0, freq = 0;
+    uint32_t startSpd = 0, finalSpd = 0, accTime = 0, StepNum = 0;
+    float freq = 0;
     uint8_t dir = 0, useDec = 0;
 
     if (hspi == &hspi1) {
         // Check buffer
         if (Buff[0] != 0x55 && Buff[15] != 0xAA) {
-            Data_ReFormatData((char*)Buff, 16, 0x55);
+            Data_ReFormatData((char *)Buff, 16, 0x55);
         }
 
         // Get ID
@@ -140,7 +141,8 @@ void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef* hspi)
             useDec = Buff[8];
 
             // init
-            Step_Prefill(&steplist[motorID], dir, StepNum, Decelerate_USE);
+            dir = (motorID % 2) ? dir : !dir;
+            Step_Prefill(&steplist[motorID], StepNum, dir, Decelerate_USE);
             HAL_TIM_PWM_PulseFinishedCallback(steplist[motorID].phtim);
             break;
         case 0x03: // Abort
@@ -148,17 +150,29 @@ void HAL_SPI_RxCpltCallback(SPI_HandleTypeDef* hspi)
             break;
 
         case 0x04: // Drive as Motor
-            steplist[motorID].useAsMotor = 1;
             // Close output
             if (steplist[motorID].state != Stop) {
                 HAL_TIM_PWM_Stop_DMA(steplist[motorID].phtim, steplist[motorID].channel);
             }
             // Get Data
-            freq = *(uint32_t*)&Buff[3];
+            freq = *(float*)&Buff[3];
+            if (freq == 0) {
+                if (steplist[motorID].useAsMotor == 0) {
+                    break;
+                } else {
+                    HAL_TIM_PWM_Start(steplist[motorID].phtim, steplist[motorID].channel);
+                }
+            }
             dir = Buff[7];
-            // Get PSC
-            steplist[motorID].phtim->Instance->PSC = (uint16_t)((RCC_MAX_FREQUENCY / (steplist[motorID].phtim->Instance->ARR + 1)) / steplist[motorID].Fcur - 1);
 
+            // Get PSC
+            dir = (motorID % 2) ? dir : !dir;
+            HAL_GPIO_WritePin(steplist[motorID].gpioPort, steplist[motorID].gpioPin, dir);
+            steplist[motorID].phtim->Instance->PSC = (uint16_t)((RCC_MAX_FREQUENCY / (steplist[motorID].phtim->Instance->ARR + 1)) / freq - 1);
+            if (steplist[motorID].useAsMotor == 0) {
+                HAL_TIM_PWM_Start(steplist[motorID].phtim, steplist[motorID].channel);
+                steplist[motorID].useAsMotor = 1;
+            }
             break;
         default:
             break;
@@ -178,7 +192,7 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef* htim)
             } else if (steplist[i].state == Stop) {
                 HAL_TIM_PWM_Stop_DMA(steplist[i].phtim, steplist[i].channel);
                 Step_Unlock(&steplist[i]);
-            }
+            }						
 
             Step_BuffFill(&steplist[i]);
         }
@@ -197,7 +211,7 @@ void HAL_TIM_PWM_PulseFinishedCallback(TIM_HandleTypeDef* htim)
 // Driver: byte0-0x55; byte1-Instruction(0x02); byte2-motorID; byte3:6-StepNumber(Hz); byte7-Direction; byte8-UseDecelerate;                  byte15-0xAA;
 // Abort : byte0-0x55; byte1-Instruction(0x03); byte2-motorID;                               byte3:14-Reserved;                               byte15-0xAA;
 //  In Motor Mode:
-// Drive : byte0-0x55; byte1-Instruction(0x04); byte2-motorID; byte3-Direction;              byte4:14-Reserved;                               byte15-0xAA;
+// Drive : byte0-0x55; byte1-Instruction(0x04); byte2-motorID; byte3:6-Speed(Hz); byte7-Direction;              byte8:14-Reserved;            byte15-0xAA;
 
 /* USER CODE END 0 */
 
@@ -238,20 +252,15 @@ int main(void)
     MX_TIM2_Init();
     MX_TIM5_Init();
     /* USER CODE BEGIN 2 */
-    Step_Init(&steplist[0], &htim5, TIM_CHANNEL_4, DIR4_GPIO_Port, DIR4_Pin, 50, 5000, 500);
-    Step_Init(&steplist[1], &htim1, TIM_CHANNEL_4, DIR0_GPIO_Port, DIR0_Pin, 50, 5000, 500);
-    Step_Init(&steplist[2], &htim2, TIM_CHANNEL_1, DIR1_GPIO_Port, DIR1_Pin, 50, 5000, 500);
-    Step_Init(&steplist[3], &htim3, TIM_CHANNEL_1, DIR2_GPIO_Port, DIR2_Pin, 50, 5000, 500);
-    Step_Init(&steplist[4], &htim4, TIM_CHANNEL_1, DIR3_GPIO_Port, DIR3_Pin, 50, 5000, 500);
+    Step_Init(&steplist[0], &htim5, TIM_CHANNEL_4, DIR0_GPIO_Port, DIR0_Pin, 50, 5000, 500);
+    Step_Init(&steplist[1], &htim1, TIM_CHANNEL_4, DIR1_GPIO_Port, DIR1_Pin, 50, 5000, 500);
+    Step_Init(&steplist[2], &htim2, TIM_CHANNEL_1, DIR2_GPIO_Port, DIR2_Pin, 50, 5000, 500);
+    Step_Init(&steplist[3], &htim3, TIM_CHANNEL_1, DIR3_GPIO_Port, DIR3_Pin, 50, 5000, 500);
+    Step_Init(&steplist[4], &htim4, TIM_CHANNEL_1, DIR4_GPIO_Port, DIR4_Pin, 50, 5000, 500);
 
     // TIM2->CCR1 = 10;
 
     HAL_SPI_Receive_DMA(&hspi1, Buff, 16);
-
-    for (int i = 0; i < 5; i++) {
-        Step_Prefill(&steplist[i], (i + 1) * 1000, 0, Decelerate_USE);
-        HAL_TIM_PWM_PulseFinishedCallback(steplist[i].phtim);
-    }
 
     /* USER CODE END 2 */
 

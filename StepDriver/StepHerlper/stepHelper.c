@@ -33,7 +33,23 @@ void Step_Init(stepTypedef* hstep, TIM_HandleTypeDef* phtim, uint32_t channel, G
     hstep->gpioPort = GPIOx;
     hstep->gpioPin = GPIO_Pin;
 
-    hstep->phtim->Instance->CCR1 = 0.5f * hstep->phtim->Instance->ARR;
+    switch (hstep->channel) {
+    case TIM_CHANNEL_1:
+        hstep->phtim->Instance->CCR1 = 0.5f * hstep->phtim->Instance->ARR;
+        break;
+    case TIM_CHANNEL_2:
+        hstep->phtim->Instance->CCR2 = 0.5f * hstep->phtim->Instance->ARR;
+        break;
+    case TIM_CHANNEL_3:
+        hstep->phtim->Instance->CCR3 = 0.5f * hstep->phtim->Instance->ARR;
+        break;
+    case TIM_CHANNEL_4:
+        hstep->phtim->Instance->CCR4 = 0.5f * hstep->phtim->Instance->ARR;
+        break;
+
+    default:
+        break;
+    }
 
     hstep->Fmin = Fmin;
     hstep->Fmax = Fmax;
@@ -295,6 +311,7 @@ int Step_Unlock(stepTypedef* hstep)
  */
 void Step_Abort(stepTypedef* hstep)
 {
+    HAL_TIM_PWM_Stop(hstep->phtim, hstep->channel);
     HAL_TIM_PWM_Stop_DMA(hstep->phtim, hstep->channel);
     Step_Unlock(hstep);
 }

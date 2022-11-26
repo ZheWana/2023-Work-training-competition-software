@@ -9,6 +9,7 @@
 #define _QMC5883L_H
 
 #include "i2c.h"
+#define QMC5883_IIC_Handle hi2c1
 
 #define QMC5883_Addr            (0x0D<<1)
 

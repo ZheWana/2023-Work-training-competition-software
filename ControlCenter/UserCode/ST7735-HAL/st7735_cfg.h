@@ -1,7 +1,7 @@
 /*
  * st7735_cfg.h
  *
- *  Created on: 16 бе?. 2019 ?.
+ *  Created on: 16 пїЅпїЅ?. 2019 ?.
  *      Author: Andriy Honcharenko
  *        Blog: https://stm32withoutfear.blogspot.com
  */
