@@ -12,12 +12,9 @@
 #define LogStart(_describe) do{if(!_describe)goto _describe##Lable;}while(0)
 #define LogEnd(_describe) _describe##Lable :
 
-//#define DO_NOT_LOG_ALL
-#ifndef DO_NOT_LOG_ALL
-#define LogAboutQMC5883_GetData         (0)
+#define LogAboutQMC5883_GetData         (1)
 #define LogAboutQMC5883_CordanateInit   (0)
 #define LogAboutInfrared                (0)
-#endif//DO_NOT_LOG_ALL
 
 
 #endif //CONTROLCENTER_LOGCONFIG_H

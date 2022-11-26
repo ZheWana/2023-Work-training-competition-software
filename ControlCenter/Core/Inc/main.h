@@ -90,9 +90,15 @@ void Error_Handler(void);
 #define ST7735_BL_Pin GPIO_PIN_3
 #define ST7735_BL_GPIO_Port GPIOD
 /* USER CODE BEGIN Private defines */
-#define Key_PollingPeriod       (10)
-#define UC_PollingPeriod        (200)
-#define UC_TimerResetPeriod     (10000)
+#define Key_PollingPeriod               (10)
+#define UC_PollingPeriod                (20)
+#define UC_TimerResetPeriod             (10000)
+#define SupportServoID                  (6)
+#define ClipServoID                     (2)
+#define StepsEachGrid_Y                 (5150)
+#define StepsEachGrid_X                 (5453)
+#define StepsEach180                    (10800)
+#define CommunicationInterval           (3)   // In ms
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
