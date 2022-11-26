@@ -311,6 +311,7 @@ int Step_Unlock(stepTypedef* hstep)
  */
 void Step_Abort(stepTypedef* hstep)
 {
+    HAL_TIM_PWM_Stop(hstep->phtim, hstep->channel);
     HAL_TIM_PWM_Stop_DMA(hstep->phtim, hstep->channel);
     Step_Unlock(hstep);
 }
