@@ -9,12 +9,13 @@
 
   <project>
     <PathAndName>.\StepDriver\MDK-ARM\StepDriver.uvprojx</PathAndName>
-    <NodeIsActive>1</NodeIsActive>
     <NodeIsExpanded>1</NodeIsExpanded>
   </project>
 
   <project>
     <PathAndName>.\ControlCenter\MDK-ARM\ControlCenter.uvprojx</PathAndName>
+    <NodeIsActive>1</NodeIsActive>
+    <NodeIsExpanded>1</NodeIsExpanded>
   </project>
 
 </ProjectWorkspace>
