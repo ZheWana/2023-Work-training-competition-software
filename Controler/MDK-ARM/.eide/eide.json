@@ -2,7 +2,9 @@
   "name": "Controler",
   "type": "ARM",
   "dependenceList": [],
-  "srcDirs": [],
+  "srcDirs": [
+    ".eide/deps"
+  ],
   "virtualFolder": {
     "name": "<virtual_root>",
     "files": [],
@@ -206,7 +208,9 @@
   "outDir": "build",
   "deviceName": null,
   "packDir": null,
-  "miscInfo": {},
+  "miscInfo": {
+    "uid": "1d39fb2cd9392bd02cfbbc66593729b3"
+  },
   "targets": {
     "Controler": {
       "excludeList": [],
@@ -339,8 +343,6 @@
       "uploadConfigMap": {},
       "custom_dep": {
         "name": "default",
-        "sourceDirList": [],
-        "libList": [],
         "incList": [
           "../Core/Inc",
           "../Drivers/STM32H7xx_HAL_Driver/Inc",
@@ -351,8 +353,11 @@
           "../Drivers/CMSIS/Device/ST/STM32H7xx/Include",
           "../Drivers/CMSIS/Include",
           ".cmsis/include",
-          "RTE/_Controler"
+          "RTE/_Controler",
+          ".eide/deps"
         ],
+        "libList": [],
+        "sourceDirList": [],
         "defineList": [
           "USE_HAL_DRIVER",
           "STM32H750xx"
