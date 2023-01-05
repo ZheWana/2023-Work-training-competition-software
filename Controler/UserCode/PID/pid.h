@@ -36,12 +36,44 @@ typedef struct {
 
 } Pid_t;
 
-// PID实现函数
-float PID_Realize(Pid_t *ctrl);
+/**
+ * @brief PID初始化函数
+ * @param pid pid句柄
+ * @param kp 比例参数
+ * @param ki 积分参数
+ * @param kd 微分参数
+ */
+void PID_Init(Pid_t *pid, float kp, float ki, float kd);
 
-float PID_RealizeForAngle(Pid_t *ctrl);
+/**
+ * @brief PID设定目标值
+ * @param pid pid句柄
+ * @param aim 目标值
+ */
+void PID_SetAim(Pid_t *pid, float aim) ;
 
-// PID初始化函数
-void PID_Init(Pid_t *ctrl, float kp, float ki, float kd, float aim);
+/**
+ * @brief PID重置函数
+ * @param pid pid句柄
+ * @note 重置函数不对PID参数和目标值进行重置，仅对运算中间量进行重置
+ */
+void PID_Reset(Pid_t *pid);
+
+/**
+ * @brief 一般PID实现函数
+ * @param pid pid句柄
+ * @param input 当前输入量
+ * @return PID输出量
+ */
+float PID_Realize(Pid_t* pid, float input);
+
+/**
+ * @brief 带有角度溢出的PID实现
+ * @param pid pid句柄
+ * @param input 当前输入量
+ * @return PID输出量
+ * @note 角度使用弧度制
+ */
+float PID_RealizeForAngle(Pid_t *pid, float input);
 
 #endif // PID_H

@@ -31,12 +31,10 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
-
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
@@ -53,12 +51,14 @@ extern "C" {
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
-
+void msgLog(const char *format, ...);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
 #define LED_System_Pin GPIO_PIN_3
 #define LED_System_GPIO_Port GPIOE
+#define SER_Pin GPIO_PIN_0
+#define SER_GPIO_Port GPIOC
 #define CLK_Pin GPIO_PIN_1
 #define CLK_GPIO_Port GPIOC
 #define LD_Pin GPIO_PIN_2
@@ -91,8 +91,18 @@ void Error_Handler(void);
 #define LED_Blue_GPIO_Port GPIOD
 #define LED_White_Pin GPIO_PIN_11
 #define LED_White_GPIO_Port GPIOD
+#define PMW3901_CS_Pin GPIO_PIN_7
+#define PMW3901_CS_GPIO_Port GPIOD
 /* USER CODE BEGIN Private defines */
-
+#define Key_PollingPeriod               (10)
+#define UC_PollingPeriod                (20)
+#define UC_TimerResetPeriod             (10000)
+#define SupportServoID                  (6)
+#define ClipServoID                     (2)
+#define StepsEachGrid_Y                 (5150)
+#define StepsEachGrid_X                 (5453)
+#define StepsEach180                    (10800)
+#define CommunicationInterval           (3)   // In ms
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

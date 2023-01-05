@@ -56,7 +56,8 @@ __heap_limit
                 EXPORT  __Vectors
                 EXPORT  __Vectors_End
                 EXPORT  __Vectors_Size
-
+				EXPORT  __initial_sp
+					
 __Vectors       DCD     __initial_sp                      ; Top of Stack
                 DCD     Reset_Handler                     ; Reset Handler
                 DCD     NMI_Handler                       ; NMI Handler

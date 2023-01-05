@@ -6,7 +6,7 @@
   */
 #include "key.h"
 #include "CommonKey/comKey.h"
-#include "DebugLogger/Debug.h"
+#include "printf.h"
 
 comkey_t keys[3];
 
@@ -36,7 +36,7 @@ void ComKey_FirstLongTriggerCallback(comkey_t *key) {
 void ComKey_MultipleClickCallback(comkey_t *key) {
     for (int i = 0; i < 3; i++) {
         if (key == &keys[i]) {
-            DebugLog("key%d", i);
+            printf("key%d", i);
         }
     }
 }

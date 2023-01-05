@@ -25,7 +25,18 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "key.h"
+#include "move.h"
+#include "stdio.h"
+#include "usart.h"
+#include "utils.h"
+#include "stdlib.h"
+#include "PID/pid.h"
+#include "74HC165/74HC165.h"
+#include "Compass/QMC5883L.h"
+#include "CommonKey/comKey.h"
+#include "ST7735-HAL/st7735.h"
+#include "LobotSerialServo/LobotSerialServo.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -47,27 +58,31 @@
 /* USER CODE BEGIN Variables */
 
 /* USER CODE END Variables */
-/* Definitions for defaultTask */
-osThreadId_t defaultTaskHandle;
-const osThreadAttr_t defaultTask_attributes = {
-  .name = "defaultTask",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityNormal,
+/* Definitions for LEDcontrol */
+osThreadId_t LEDcontrolHandle;
+const osThreadAttr_t LEDcontrol_attributes = {
+        .name = "LEDcontrol",
+        .stack_size = 128 * 4,
+        .priority = (osPriority_t) osPriorityNormal,
 };
-/* Definitions for MessageQueue */
-osMessageQueueId_t MessageQueueHandle;
-const osMessageQueueAttr_t MessageQueue_attributes = {
-  .name = "MessageQueue"
+/* Definitions for SerialOutput */
+osThreadId_t SerialOutputHandle;
+const osThreadAttr_t SerialOutput_attributes = {
+        .name = "SerialOutput",
+        .stack_size = 512 * 4,
+        .priority = (osPriority_t) osPriorityLow,
 };
-/* Definitions for bGetaPidOutSem */
-osSemaphoreId_t bGetaPidOutSemHandle;
-const osSemaphoreAttr_t bGetaPidOutSem_attributes = {
-  .name = "bGetaPidOutSem"
+/* Definitions for StateMachine */
+osThreadId_t StateMachineHandle;
+const osThreadAttr_t StateMachine_attributes = {
+        .name = "StateMachine",
+        .stack_size = 128 * 4,
+        .priority = (osPriority_t) osPriorityLow,
 };
-/* Definitions for bSerialOutputSem */
-osSemaphoreId_t bSerialOutputSemHandle;
-const osSemaphoreAttr_t bSerialOutputSem_attributes = {
-  .name = "bSerialOutputSem"
+/* Definitions for bQueuePut */
+osSemaphoreId_t bQueuePutHandle;
+const osSemaphoreAttr_t bQueuePut_attributes = {
+        .name = "bQueuePut"
 };
 
 /* Private function prototypes -----------------------------------------------*/
@@ -75,7 +90,11 @@ const osSemaphoreAttr_t bSerialOutputSem_attributes = {
 
 /* USER CODE END FunctionPrototypes */
 
-void StartDefaultTask(void *argument);
+void LEDcontrolEntry(void *argument);
+
+void SerialOutputEntry(void *argument);
+
+void StateMachineEntry(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -85,67 +104,108 @@ void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
   * @retval None
   */
 void MX_FREERTOS_Init(void) {
-  /* USER CODE BEGIN Init */
+    /* USER CODE BEGIN Init */
 
-  /* USER CODE END Init */
+    /* USER CODE END Init */
 
-  /* USER CODE BEGIN RTOS_MUTEX */
-  /* add mutexes, ... */
-  /* USER CODE END RTOS_MUTEX */
+    /* USER CODE BEGIN RTOS_MUTEX */
+    /* add mutexes, ... */
+    /* USER CODE END RTOS_MUTEX */
 
-  /* Create the semaphores(s) */
-  /* creation of bGetaPidOutSem */
-  bGetaPidOutSemHandle = osSemaphoreNew(1, 1, &bGetaPidOutSem_attributes);
+    /* Create the semaphores(s) */
+    /* creation of bQueuePut */
+    bQueuePutHandle = osSemaphoreNew(1, 1, &bQueuePut_attributes);
 
-  /* creation of bSerialOutputSem */
-  bSerialOutputSemHandle = osSemaphoreNew(1, 1, &bSerialOutputSem_attributes);
+    /* USER CODE BEGIN RTOS_SEMAPHORES */
+    /* add semaphores, ... */
+    /* USER CODE END RTOS_SEMAPHORES */
 
-  /* USER CODE BEGIN RTOS_SEMAPHORES */
-  /* add semaphores, ... */
-  /* USER CODE END RTOS_SEMAPHORES */
+    /* USER CODE BEGIN RTOS_TIMERS */
+    /* start timers, add new ones, ... */
+    /* USER CODE END RTOS_TIMERS */
 
-  /* USER CODE BEGIN RTOS_TIMERS */
-  /* start timers, add new ones, ... */
-  /* USER CODE END RTOS_TIMERS */
+    /* USER CODE BEGIN RTOS_QUEUES */
+    /* add queues, ... */
+    /* USER CODE END RTOS_QUEUES */
 
-  /* Create the queue(s) */
-  /* creation of MessageQueue */
-  MessageQueueHandle = osMessageQueueNew (16, sizeof(uint32_t), &MessageQueue_attributes);
+    /* Create the thread(s) */
+    /* creation of LEDcontrol */
+    LEDcontrolHandle = osThreadNew(LEDcontrolEntry, NULL, &LEDcontrol_attributes);
 
-  /* USER CODE BEGIN RTOS_QUEUES */
-  /* add queues, ... */
-  /* USER CODE END RTOS_QUEUES */
+    /* creation of SerialOutput */
+    SerialOutputHandle = osThreadNew(SerialOutputEntry, NULL, &SerialOutput_attributes);
 
-  /* Create the thread(s) */
-  /* creation of defaultTask */
-  defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
+    /* creation of StateMachine */
+    StateMachineHandle = osThreadNew(StateMachineEntry, NULL, &StateMachine_attributes);
 
-  /* USER CODE BEGIN RTOS_THREADS */
-  /* add threads, ... */
-  /* USER CODE END RTOS_THREADS */
+    /* USER CODE BEGIN RTOS_THREADS */
+    /* add threads, ... */
+    /* USER CODE END RTOS_THREADS */
 
-  /* USER CODE BEGIN RTOS_EVENTS */
-  /* add events, ... */
-  /* USER CODE END RTOS_EVENTS */
+    /* USER CODE BEGIN RTOS_EVENTS */
+    /* add events, ... */
+    /* USER CODE END RTOS_EVENTS */
 
 }
 
-/* USER CODE BEGIN Header_StartDefaultTask */
+/* USER CODE BEGIN Header_LEDcontrolEntry */
 /**
-  * @brief  Function implementing the defaultTask thread.
+  * @brief  Function implementing the LEDcontrol thread.
   * @param  argument: Not used
   * @retval None
   */
-/* USER CODE END Header_StartDefaultTask */
-void StartDefaultTask(void *argument)
-{
-  /* USER CODE BEGIN StartDefaultTask */
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
-  /* USER CODE END StartDefaultTask */
+/* USER CODE END Header_LEDcontrolEntry */
+void LEDcontrolEntry(void *argument) {
+    /* USER CODE BEGIN LEDcontrolEntry */
+    /* Infinite loop */
+    for (;;) {
+        HAL_GPIO_WritePin(LED_System_GPIO_Port, LED_System_Pin, GPIO_PIN_SET);
+        osDelay(50);
+        HAL_GPIO_WritePin(LED_System_GPIO_Port, LED_System_Pin, GPIO_PIN_RESET);
+        osDelay(950);
+    }
+    /* USER CODE END LEDcontrolEntry */
+}
+
+/* USER CODE BEGIN Header_SerialOutputEntry */
+/**
+* @brief Function implementing the SerialOutput thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_SerialOutputEntry */
+void SerialOutputEntry(void *argument) {
+    /* USER CODE BEGIN SerialOutputEntry */
+    /* Infinite loop */
+    for (;;) {
+        printf("data:");
+        printf("%d,", CarInfo.spd[0]);
+        printf("%f,", CarInfo.mPid[0].ctr.aim);
+        printf("%f,", CarInfo.psi[0]);
+        printf("%f,", CarInfo.pPid[0].ctr.aim);
+        printf("%f", log2(CarInfo.isCarMoving == 0 ? 1 : CarInfo.isCarMoving));
+//        for (int i = 0; i < 4; i++) {
+//            printf("%d,", CarInfo.spd[i]);
+//        }
+        printf("\n");
+    }
+    /* USER CODE END SerialOutputEntry */
+}
+
+/* USER CODE BEGIN Header_StateMachineEntry */
+/**
+* @brief Function implementing the StateMachine thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_StateMachineEntry */
+void StateMachineEntry(void *argument) {
+    /* USER CODE BEGIN StateMachineEntry */
+    /* Infinite loop */
+    for (;;) {
+        osDelay(1000);
+    }
+    /* USER CODE END StateMachineEntry */
 }
 
 /* Private application code --------------------------------------------------*/

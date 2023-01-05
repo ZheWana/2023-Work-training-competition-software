@@ -8,26 +8,39 @@
 #define CONTROLCENTER_UTILS_H
 
 #include "stdint.h"
+#include "stdbool.h"
 #include "PID/pid.h"
+#include "PMW3901/PMW3901.h"
 
 #define ToDig(rad) (rad * 57.295779513082320876798154814105)
 #define ToRad(dig) (dig * 0.01745329251994329576923690768489)
+
+#define IsCarStatic (!CarInfo.isCarMoving)
+
 #ifndef M_PI
 #define M_PI 3.1415926535897932384626433832795
 #endif
 
 typedef struct CarControlBlock {
-    // 状态数据
-    float curX, curY;
-    float aimX, aimY;
-    float yaw;// 弧度制
-    float vx, vy;
+    // 电机控制相关
+    int16_t spd[4];
+    Pid_t mPid[4];
+    float psi[4];
+    Pid_t pPid[4];
+    float spdLimit;
+    bool psiCtr;
+    bool firstPsiLoop;
 
-    // 矫正航向角坐标系数据
+    // 整车定位数据
+    PMW3901 pmw;
+    int32_t curX, curY;
+    float aimX, aimY;
+
+    // 整车姿态相关数据
+    float yaw;// 弧度制
     float initYawOffset;
     uint8_t isYawInited: 1;
-
-    const float unitSpeed;
+    uint32_t isCarMoving;// 定时器中断中监测整车是否静止，用作步骤规划
 
     // 存储三色物块抓取和放置顺序
     uint8_t order[3];
@@ -69,22 +82,8 @@ extern CCB_Typedef CarInfo;
 void Speed2MotorConverter(float vx, float vy,
                           float *m1Speed, float *m2Speed, float *m3Speed, float *m4Speed);
 
-int Step_MoveAsMotor(uint8_t motorID, float freq);
-
-int Step_SetSpeed(uint8_t motorID, uint32_t startSpeed, uint32_t finalSpeed, uint32_t accTime);
-
-int Step_MoveSteps(uint8_t motorID, uint8_t dir, uint8_t useDec, uint32_t stepNum);
-
-void Step_Abort(uint8_t motorID);
-
 void SupportRotation(float position, uint32_t time);
 
 void ClipRotition(float position, uint32_t time);
-
-void MoveX(int64_t steps);
-
-void MoveY(int64_t steps);
-
-void Rotate(int64_t steps);
 
 #endif //CONTROLCENTER_UTILS_H

@@ -10,6 +10,11 @@
     "files": [],
     "folders": [
       {
+        "name": "::CMSIS",
+        "files": [],
+        "folders": []
+      },
+      {
         "name": "Application",
         "files": [],
         "folders": [
@@ -30,37 +35,37 @@
                 "name": "Core",
                 "files": [
                   {
-                    "path": "../Core/Src/main.c"
-                  },
-                  {
-                    "path": "../Core/Src/gpio.c"
-                  },
-                  {
                     "path": "../Core/Src/dma.c"
                   },
                   {
                     "path": "../Core/Src/freertos.c"
                   },
                   {
+                    "path": "../Core/Src/gpio.c"
+                  },
+                  {
                     "path": "../Core/Src/i2c.c"
                   },
                   {
+                    "path": "../Core/Src/main.c"
+                  },
+                  {
                     "path": "../Core/Src/spi.c"
-                  },
-                  {
-                    "path": "../Core/Src/tim.c"
-                  },
-                  {
-                    "path": "../Core/Src/usart.c"
-                  },
-                  {
-                    "path": "../Core/Src/stm32h7xx_it.c"
                   },
                   {
                     "path": "../Core/Src/stm32h7xx_hal_msp.c"
                   },
                   {
                     "path": "../Core/Src/stm32h7xx_hal_timebase_tim.c"
+                  },
+                  {
+                    "path": "../Core/Src/stm32h7xx_it.c"
+                  },
+                  {
+                    "path": "../Core/Src/tim.c"
+                  },
+                  {
+                    "path": "../Core/Src/usart.c"
                   }
                 ],
                 "folders": []
@@ -73,6 +78,15 @@
         "name": "Drivers",
         "files": [],
         "folders": [
+          {
+            "name": "CMSIS",
+            "files": [
+              {
+                "path": "../Core/Src/system_stm32h7xx.c"
+              }
+            ],
+            "folders": []
+          },
           {
             "name": "STM32H7xx_HAL_Driver",
             "files": [
@@ -144,15 +158,6 @@
               }
             ],
             "folders": []
-          },
-          {
-            "name": "CMSIS",
-            "files": [
-              {
-                "path": "../Core/Src/system_stm32h7xx.c"
-              }
-            ],
-            "folders": []
           }
         ]
       },
@@ -197,11 +202,6 @@
             "folders": []
           }
         ]
-      },
-      {
-        "name": "::CMSIS",
-        "files": [],
-        "folders": []
       }
     ]
   },

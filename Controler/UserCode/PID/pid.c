@@ -14,44 +14,53 @@
 #include "math.h"
 
 // PID实现函数
-float PID_Realize(Pid_t* ctrl)
-{
-    ctrl->error.cur = ctrl->ctr.aim - ctrl->ctr.cur;
-    ctrl->error.sum += ctrl->error.cur;
+float PID_Realize(Pid_t *pid, float input) {
+    pid->ctr.cur = input;
 
-    // 中线附近屏蔽积分作用
-    // if (fabsf(ctrl->error.cur) < 1) { // fabsf(ctrl->error.cur) < 1 ||
-    //     ctrl->error.sum = 0;
-    // }
+    pid->error.cur = pid->ctr.aim - pid->ctr.cur;
+    pid->error.sum += pid->error.cur;
+    pid->error.bia = pid->error.cur - pid->error.pre;
+    pid->error.pre = pid->error.cur;
 
-    ctrl->error.bia = ctrl->error.cur - ctrl->error.pre;
-    ctrl->error.pre = ctrl->error.cur;
-
-    ctrl->ctr.pre = ctrl->ctr.cur;
-    return ctrl->kp * ctrl->error.cur + ctrl->ki * ctrl->error.sum + ctrl->kd * ctrl->error.bia;
+    pid->ctr.pre = pid->ctr.cur;
+    return pid->kp * pid->error.cur + pid->ki * pid->error.sum + pid->kd * pid->error.bia;
 }
 
-float PID_RealizeForAngle(Pid_t* ctrl)
-{
-    ctrl->error.cur = ctrl->ctr.aim - ctrl->ctr.cur;
-    if (fabsf(ctrl->error.cur) > M_PI && fabsf(ctrl->error.cur) < 2 * M_PI) { // 角度溢出处理
-        if (ctrl->error.cur > 0) {
-            ctrl->error.cur -= 2 * M_PI;
-        } else if (ctrl->error.cur < 0) {
-            ctrl->error.cur += 2 * M_PI;
+float PID_RealizeForAngle(Pid_t *pid, float input) {
+    pid->ctr.cur = input;
+
+    pid->error.cur = pid->ctr.aim - pid->ctr.cur;
+    if (fabsf(pid->error.cur) > M_PI && fabsf(pid->error.cur) < 2 * M_PI) { // 角度溢出处理
+        if (pid->error.cur > 0) {
+            pid->error.cur -= 2 * M_PI;
+        } else if (pid->error.cur < 0) {
+            pid->error.cur += 2 * M_PI;
         }
     }
-    ctrl->error.sum += ctrl->error.cur;
-    ctrl->error.bia = ctrl->error.cur - ctrl->error.pre;
-    ctrl->error.pre = ctrl->error.cur;
-    return ctrl->kp * ctrl->error.cur + ctrl->ki * ctrl->error.sum + ctrl->kd * ctrl->error.bia;
+    pid->error.sum += pid->error.cur;
+    pid->error.bia = pid->error.cur - pid->error.pre;
+    pid->error.pre = pid->error.cur;
+
+    pid->ctr.pre = pid->ctr.cur;
+    return pid->kp * pid->error.cur + pid->ki * pid->error.sum + pid->kd * pid->error.bia;
 }
 
 // PID初始化函数
-void PID_Init(Pid_t* ctrl, float kp, float ki, float kd, float aim)
-{
-    ctrl->kp = kp;
-    ctrl->ki = ki;
-    ctrl->kd = kd;
-    ctrl->ctr.aim = aim;
+void PID_Init(Pid_t *pid, float kp, float ki, float kd) {
+    pid->kp = kp;
+    pid->ki = ki;
+    pid->kd = kd;
+}
+
+void PID_Reset(Pid_t *pid) {
+    pid->ctr.cur = 0;
+    pid->ctr.pre = 0;
+    pid->error.cur = 0;
+    pid->error.pre = 0;
+    pid->error.bia = 0;
+    pid->error.sum = 0;
+}
+
+void PID_SetAim(Pid_t *pid, float aim) {
+    pid->ctr.aim = aim;
 }
