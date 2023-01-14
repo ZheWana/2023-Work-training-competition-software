@@ -10,8 +10,10 @@
 #include "utils.h"
 #include <stddef.h>
 #include "CommonKey/comKey.h"
+#include "LetterShell/shell.h"
 #include "./Compass/QMC5883L.h"
 #include "./ST7735-HAL/st7735.h"
+#include "SerialParaChanger/SPChanger.h"
 #include "LobotSerialServo/LobotSerialServo.h"
 
 void __RunMainState(void) {
@@ -112,7 +114,7 @@ void __RunDropState(void) {
 }
 
 CCB_Typedef CarInfo = {
-        .psiCtr = 0,
+        .psiCtr = 1,
         .spdLimit = 20,
         .order[Red] = 1,
         .order[Blue] = 2,
@@ -125,6 +127,7 @@ CCB_Typedef CarInfo = {
         .RunDropState = __RunDropState,
         .aPidPeriod = 50,
 };
+Shell shell;
 
 /**
  * @brief 龙门支撑底座旋转
@@ -147,4 +150,13 @@ void ClipRotition(float position, uint32_t time) {
     HAL_Delay(time + 100);
 }
 
+extern char chBuff;
+
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
+    if (huart->Instance == UART5) {
+        SPC_GetChar(chBuff);
+        shellHandler(&shell, chBuff);
+        HAL_UART_Receive_IT(huart, (uint8_t *) &chBuff, 1);
+    }
+}
 

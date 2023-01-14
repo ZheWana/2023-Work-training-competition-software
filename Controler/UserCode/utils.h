@@ -11,6 +11,9 @@
 #include "stdbool.h"
 #include "PID/pid.h"
 #include "PMW3901/PMW3901.h"
+#include "Compass/QMC5883L.h"
+#include "ICM42605/ICM42605.h"
+#include "LetterShell/shell.h"
 
 #define ToDig(rad) (rad * 57.295779513082320876798154814105)
 #define ToRad(dig) (dig * 0.01745329251994329576923690768489)
@@ -27,6 +30,7 @@ typedef struct CarControlBlock {
     Pid_t mPid[4];
     float psi[4];
     Pid_t pPid[4];
+    float spdStep;
     float spdLimit;
     bool psiCtr;
     bool firstPsiLoop;
@@ -37,6 +41,8 @@ typedef struct CarControlBlock {
     float aimX, aimY;
 
     // 整车姿态相关数据
+    hmcData_t hmc;
+    icmData_t icm;
     float yaw;// 弧度制
     float initYawOffset;
     uint8_t isYawInited: 1;
@@ -78,6 +84,7 @@ typedef struct CarControlBlock {
 } CCB_Typedef;
 
 extern CCB_Typedef CarInfo;
+extern Shell shell;
 
 void Speed2MotorConverter(float vx, float vy,
                           float *m1Speed, float *m2Speed, float *m3Speed, float *m4Speed);

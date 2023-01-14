@@ -79,6 +79,8 @@ void msgLog(const char *format, ...);
 #define ST7735_CS_GPIO_Port GPIOE
 #define ST7735_DC_Pin GPIO_PIN_13
 #define ST7735_DC_GPIO_Port GPIOE
+#define ST7735_RES_Pin GPIO_PIN_15
+#define ST7735_RES_GPIO_Port GPIOE
 #define KEY2_Pin GPIO_PIN_14
 #define KEY2_GPIO_Port GPIOB
 #define KEY1_Pin GPIO_PIN_15
@@ -91,6 +93,8 @@ void msgLog(const char *format, ...);
 #define LED_Blue_GPIO_Port GPIOD
 #define LED_White_Pin GPIO_PIN_11
 #define LED_White_GPIO_Port GPIOD
+#define SPI3_CS_Pin GPIO_PIN_15
+#define SPI3_CS_GPIO_Port GPIOA
 #define PMW3901_CS_Pin GPIO_PIN_7
 #define PMW3901_CS_GPIO_Port GPIOD
 /* USER CODE BEGIN Private defines */

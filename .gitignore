@@ -82,6 +82,8 @@ JLink*.txt
 
 # project private
 /.vscode
+*.exe
+*.zip
 
 !/*/MDK-ARM/StepDriver/*.sct
 /Local_test
