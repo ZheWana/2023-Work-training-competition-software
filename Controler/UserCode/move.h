@@ -12,12 +12,17 @@
 
 #include "stdbool.h"
 
-void PositionLoopSet(int status);
+#define MotorPositionLoopSet(status) do{CarInfo.mPsiCtr = status;}while(0)
+#define CarPositionLoopSet(status) do{CarInfo.cPsiCtr = status;}while(0)
 
 void MecanumMove(float disY, float disX, float spdLimit, bool waitUntilStop);
 
 void MecanumSpeedSet(float spdY, float spdX);
 
 void MecanumRotate(float dig, float spdLimit, bool waitUntilStop);
+
+void MapSpeedSet(float spdY, float spdX);
+
+void MapMove(float disY, float disX, float spdLimit, bool waitUntilStop);
 
 #endif //CONTROLER_MOVE_H
