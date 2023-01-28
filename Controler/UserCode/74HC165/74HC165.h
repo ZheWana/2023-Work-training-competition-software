@@ -16,6 +16,6 @@
 #define SER_R HAL_GPIO_ReadPin(SER_GPIO_Port,SER_Pin)
 #endif
 
-uint8_t HC165_Get_Data(uint16_t *Data);
+uint8_t HC165_Get_Data(uint32_t *Data);
 
 #endif

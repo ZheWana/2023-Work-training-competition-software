@@ -114,7 +114,7 @@ void __RunDropState(void) {
 }
 
 CCB_Typedef CarInfo = {
-        .psiCtr = 1,
+        .mPsiCtr = 1,
         .spdLimit = 20,
         .order[Red] = 1,
         .order[Blue] = 2,
@@ -128,6 +128,34 @@ CCB_Typedef CarInfo = {
         .aPidPeriod = 50,
 };
 Shell shell;
+
+void LCD_StringLayout(uint16_t maxY, char *buff, FontDef font, uint16_t color, uint16_t bgcolor) {
+    static uint16_t y = 0;
+    static uint8_t fullScreenFlag = 0;
+    uint16_t add = 0;
+
+    // End of page
+    if (maxY == 0 && buff == NULL && color == 0 && bgcolor == 0) {
+        fullScreenFlag = add = y = 0;
+//        ST7735_FillScreen(ST7735_WHITE);
+        return;
+    }
+
+    if (font.data == Font_11x18.data)
+        add = 18;
+    else if (font.data == Font_16x26.data)
+        add = 26;
+    else if (font.data == Font_7x10.data)
+        add = 10;
+
+    if (y + add <= maxY) {
+        ST7735_DrawString(0, y, buff, font, color, bgcolor);
+        y += add;
+    } else {
+        if (fullScreenFlag == 0)
+            ST7735_DrawString(0, maxY - add, "Full Content   ", font, color, bgcolor);
+    }
+}
 
 /**
  * @brief 龙门支撑底座旋转

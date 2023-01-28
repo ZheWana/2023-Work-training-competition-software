@@ -14,11 +14,28 @@
 #include "Compass/QMC5883L.h"
 #include "ICM42605/ICM42605.h"
 #include "LetterShell/shell.h"
+#include "ST7735-HAL/fonts.h"
 
 #define ToDig(rad) (rad * 57.295779513082320876798154814105)
 #define ToRad(dig) (dig * 0.01745329251994329576923690768489)
 
+#define PMW_Grid 1280
+
 #define IsCarStatic (!CarInfo.isCarMoving)
+
+#define VecRotate(x, y, theta) do{              \
+    float tx = x,ty = y;                        \
+    tx = x * cosf(theta) - y * sinf(theta);     \
+    ty = x * sinf(theta) + y * cosf(theta);     \
+    x = tx;                                     \
+    y = ty;                                     \
+}while(0)
+
+#define AngRotate2zero(rad, theta) do{ \
+    float tempRad = rad - theta;\
+    rad = (tempRad)<-M_PI?tempRad + 2 * M_PI: \
+          (tempRad)>M_PI?tempRad - 2 * M_PI:(tempRad); \
+}while(0)
 
 #ifndef M_PI
 #define M_PI 3.1415926535897932384626433832795
@@ -27,18 +44,23 @@
 typedef struct CarControlBlock {
     // 电机控制相关
     int16_t spd[4];
-    Pid_t mPid[4];
+    Pid_t msPid[4]; // motor speed pid
     float psi[4];
-    Pid_t pPid[4];
+    Pid_t mpPid[4]; // motor position pid
     float spdStep;
     float spdLimit;
-    bool psiCtr;
+    bool mPsiCtr;
     bool firstPsiLoop;
 
-    // 整车定位数据
+    // 整车控制相关
     PMW3901 pmw;
-    int32_t curX, curY;
-    float aimX, aimY;
+    float dx, dy;
+    float curX, curY;
+    Pid_t cpPidX, cpPidY;// Car position pid
+    bool cPsiCtr;
+
+    // 边界传感器数据
+    uint32_t infrared;
 
     // 整车姿态相关数据
     hmcData_t hmc;
@@ -85,6 +107,11 @@ typedef struct CarControlBlock {
 
 extern CCB_Typedef CarInfo;
 extern Shell shell;
+
+
+#define LCD_EOP 0,NULL,Font_7x10,0,0
+
+void LCD_StringLayout(uint16_t maxY, char *buff, FontDef font, uint16_t color, uint16_t bgcolor);
 
 void Speed2MotorConverter(float vx, float vy,
                           float *m1Speed, float *m2Speed, float *m3Speed, float *m4Speed);

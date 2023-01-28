@@ -30,7 +30,7 @@ uint8_t set(int argc, char *argv[]) {
     return 0;
 }
 
-uint8_t move(int argc, char *argv[]) {
+uint8_t motormove(int argc, char *argv[]) {
     if (argc == 1) {
         printf("need an argument!\r\n");
         return 1;
@@ -39,7 +39,22 @@ uint8_t move(int argc, char *argv[]) {
         float b = (float) atof(argv[2]);
         float c = (float) atof(argv[3]);
 
-//        printf("disY = %f,disX = %f,spdLimit = %f\r\n", a, b, c);
+        printf("disY = %f,disX = %f,spdLimit = %f\r\n", a, b, c);
+        MecanumMove(a, b, c, 0);
+
+    }
+    return 0;
+}
+
+uint8_t rota(int argc, char *argv[]) {
+    if (argc == 1) {
+        printf("need an argument!\r\n");
+        return 1;
+    } else {
+        float a = (float) atof(argv[1]);
+        float b = (float) atof(argv[2]);
+        float c = (float) atof(argv[3]);
+
         printf("disY = %f,spdLimit = %f\r\n", a, b);
         MecanumRotate(a, b, 0);
 
@@ -47,4 +62,7 @@ uint8_t move(int argc, char *argv[]) {
     return 0;
 }
 
-SHELL_EXPORT_CMD(SHELL_CMD_PERMISSION(0) | SHELL_CMD_TYPE(SHELL_TYPE_CMD_MAIN), move, move, Move the car);
+SHELL_EXPORT_CMD(SHELL_CMD_PERMISSION(0) | SHELL_CMD_TYPE(SHELL_TYPE_CMD_MAIN), move, motormove,
+                 Move the car);
+SHELL_EXPORT_CMD(SHELL_CMD_PERMISSION(0) | SHELL_CMD_TYPE(SHELL_TYPE_CMD_MAIN), rota, rota,
+                 Rotate the car);
