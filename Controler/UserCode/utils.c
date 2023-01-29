@@ -32,10 +32,7 @@ void __RunMainState(void) {
 
             // Soft Init
             KeyInit();
-            PID_Init(&CarInfo.aPid, 2000, 0, 0);// 7000 0 0
 
-            CarInfo.mainState = mScan;
-            CarInfo.aPidLock = aPidUnlocked;
             break;
         case mScan:// 扫描二维码,记录信息
             // TODO:
@@ -114,7 +111,8 @@ void __RunDropState(void) {
 }
 
 CCB_Typedef CarInfo = {
-        .mPsiCtr = 1,
+        .mPsiCtr = 0,
+        .cPsiCtr = 0,
         .spdLimit = 20,
         .order[Red] = 1,
         .order[Blue] = 2,

@@ -23,6 +23,10 @@
 
 #define IsCarStatic (!CarInfo.isCarMoving)
 
+#define LimitFloat(input, min, max) do{ \
+    input=input<min?min:input>max?max:input; \
+}while(0)
+
 #define VecRotate(x, y, theta) do{              \
     float tx = x,ty = y;                        \
     tx = x * cosf(theta) - y * sinf(theta);     \
@@ -47,6 +51,7 @@ typedef struct CarControlBlock {
     Pid_t msPid[4]; // motor speed pid
     float psi[4];
     Pid_t mpPid[4]; // motor position pid
+    float mpPIDout[4];
     float spdStep;
     float spdLimit;
     bool mPsiCtr;
@@ -57,6 +62,7 @@ typedef struct CarControlBlock {
     float dx, dy;
     float curX, curY;
     Pid_t cpPidX, cpPidY;// Car position pid
+    float spdX, spdY;
     bool cPsiCtr;
 
     // 边界传感器数据

@@ -141,6 +141,12 @@ void MecanumRotate(float dig, float spdLimit, bool waitUntilStop) {
 }
 
 void MapSpeedSet(float spdY, float spdX) {
+    if (!CarInfo.cPsiCtr) {
+        CarPositionLoopSet(1);
+        PID_Reset(&CarInfo.cpPidX);
+        PID_Reset(&CarInfo.cpPidY);
+    }
+
     VecRotate(spdX, spdY, -CarInfo.yaw);
     MecanumSpeedSet(spdY, spdX);
 }
