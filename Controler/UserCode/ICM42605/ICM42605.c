@@ -6,7 +6,7 @@
   */
 #include "ICM42605.h"
 
-uint8_t spi_write_byte(uint8_t reg, uint8_t data) {
+__attribute__((__noinline__)) uint8_t spi_write_byte(uint8_t reg, uint8_t data) {
     CS_LOW;
     uint8_t tx = reg & 0x7f;
     uint8_t rx;
@@ -19,7 +19,7 @@ uint8_t spi_write_byte(uint8_t reg, uint8_t data) {
     return 1;
 }
 
-uint8_t spi_read_byte(uint8_t reg) {
+__attribute__((__noinline__)) uint8_t spi_read_byte(uint8_t reg) {
     CS_LOW;
     uint8_t tx = reg | 0x80;
     uint8_t rx;
