@@ -84,6 +84,7 @@ JLink*.txt
 /.vscode
 *.exe
 *.zip
+*.uvguix.*
 
 !/*/MDK-ARM/StepDriver/*.sct
 /Local_test
