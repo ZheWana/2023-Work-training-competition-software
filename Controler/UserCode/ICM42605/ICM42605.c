@@ -5,16 +5,24 @@
  * @date 2022/5/10
   */
 #include "ICM42605.h"
+#include "printf.h"
+
+#define reglog(reg)     do{printf(#reg":%x\n", spi_read_byte(reg));HAL_Delay(10);}while(0)
+
 
 __attribute__((__noinline__)) uint8_t spi_write_byte(uint8_t reg, uint8_t data) {
     CS_LOW;
     uint8_t tx = reg & 0x7f;
     uint8_t rx;
-    if (HAL_SPI_TransmitReceive(&USE_SPI, &tx, &rx, 1, HAL_MAX_DELAY) != HAL_OK)
+    if (HAL_SPI_TransmitReceive(&USE_SPI, &tx, &rx, 1, HAL_MAX_DELAY) != HAL_OK) {
+        CS_HIGH;
         return 0;
+    }
     tx = data;
-    if (HAL_SPI_TransmitReceive(&USE_SPI, &tx, &rx, 1, HAL_MAX_DELAY) != HAL_OK)
+    if (HAL_SPI_TransmitReceive(&USE_SPI, &tx, &rx, 1, HAL_MAX_DELAY) != HAL_OK) {
+        CS_HIGH;
         return 0;
+    }
     CS_HIGH;
     return 1;
 }
@@ -23,10 +31,14 @@ __attribute__((__noinline__)) uint8_t spi_read_byte(uint8_t reg) {
     CS_LOW;
     uint8_t tx = reg | 0x80;
     uint8_t rx;
-    if (HAL_SPI_TransmitReceive(&USE_SPI, &tx, &rx, 1, HAL_MAX_DELAY) != HAL_OK)
+    if (HAL_SPI_TransmitReceive(&USE_SPI, &tx, &rx, 1, HAL_MAX_DELAY) != HAL_OK) {
+        CS_HIGH;
         return 0;
-    if (HAL_SPI_TransmitReceive(&USE_SPI, &tx, &rx, 1, HAL_MAX_DELAY) != HAL_OK)
+    }
+    if (HAL_SPI_TransmitReceive(&USE_SPI, &tx, &rx, 1, HAL_MAX_DELAY) != HAL_OK) {
+        CS_HIGH;
         return 0;
+    }
     CS_HIGH;
     return rx;
 }
@@ -37,10 +49,14 @@ uint8_t spi_read_buffer(uint8_t reg, uint8_t *buffer, uint8_t len) {
     uint8_t rx;
     uint8_t tx_buf[14] = {};
     tx_buf[0] = tx;
-    if (HAL_SPI_TransmitReceive(&USE_SPI, &tx, &rx, 1, HAL_MAX_DELAY) != HAL_OK)
+    if (HAL_SPI_TransmitReceive(&USE_SPI, &tx, &rx, 1, HAL_MAX_DELAY) != HAL_OK) {
+        CS_HIGH;
         return 0;
-    if (HAL_SPI_TransmitReceive(&USE_SPI, tx_buf, buffer, len, HAL_MAX_DELAY) != HAL_OK)
+    }
+    if (HAL_SPI_TransmitReceive(&USE_SPI, tx_buf, buffer, len, HAL_MAX_DELAY) != HAL_OK) {
+        CS_HIGH;
         return 0;
+    }
     CS_HIGH;
     return 1;
 }
@@ -50,10 +66,14 @@ uint8_t spi_write_buffer(uint8_t reg, uint8_t *buffer, uint8_t len) {
     uint8_t tx = reg & 0x7f;
     uint8_t rx;
     uint8_t rx_buf[14] = {};
-    if (HAL_SPI_TransmitReceive(&USE_SPI, &tx, &rx, 1, HAL_MAX_DELAY) != HAL_OK)
+    if (HAL_SPI_TransmitReceive(&USE_SPI, &tx, &rx, 1, HAL_MAX_DELAY) != HAL_OK) {
+        CS_HIGH;
         return 0;
-    if (HAL_SPI_TransmitReceive(&USE_SPI, buffer, rx_buf, len, HAL_MAX_DELAY) != HAL_OK)
+    }
+    if (HAL_SPI_TransmitReceive(&USE_SPI, buffer, rx_buf, len, HAL_MAX_DELAY) != HAL_OK) {
+        CS_HIGH;
         return 0;
+    }
     CS_HIGH;
     return 1;
 }
@@ -64,12 +84,13 @@ uint8_t ICM42605_Init(void) {
     data[0] = 0;//bank0
     if (spi_write_byte(ICM42605_BANK_SEL, data[0]) == 0)
         return 9;
+
+//    验证设备ID
+//    reglog(ICM42605_WHO_AM_I);
     data[0] = spi_read_byte(ICM42605_WHO_AM_I);
-    // return data[0];
-    if (data[0] != 0);
-    else
-        return 1;
     HAL_Delay(10);
+    if (data[0] == 0) return 1;
+
     data[0] = 0;//bank0
     if (spi_write_byte(ICM42605_BANK_SEL, data[0]) == 0)
         return 2;
@@ -82,6 +103,7 @@ uint8_t ICM42605_Init(void) {
     if (spi_write_byte(ICM42605_INTF_CONFIG4, data[0]) == 0)
         return 4;
     HAL_Delay(10);
+    reglog(ICM42605_INTF_CONFIG4);
     data[0] = 0;//bank0
     if (spi_write_byte(ICM42605_BANK_SEL, data[0]) == 0)
         return 5;
@@ -91,15 +113,21 @@ uint8_t ICM42605_Init(void) {
     if (spi_write_byte(ICM42605_GYRO_CONFIG0, data[0]) == 0)
         return 6;
     HAL_Delay(10);
+    reglog(ICM42605_GYRO_CONFIG0);
     data[0] = 0b00000011;   //16g
     if (spi_write_byte(ICM42605_ACCEL_CONFIG0, data[0]) == 0)
         return 7;
     HAL_Delay(10);
+    reglog(ICM42605_ACCEL_CONFIG0);
     //电源管理
     data[0] = 0b00011111;
     if (spi_write_byte(ICM42605_PWR_MGMT0, data[0]) == 0)
         return 8;
     HAL_Delay(100);
+    reglog(ICM42605_PWR_MGMT0);
+
+    HAL_Delay(1000);
+
     return 0;
 }
 

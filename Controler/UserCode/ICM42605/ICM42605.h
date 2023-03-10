@@ -11,10 +11,14 @@
 #include "gpio.h"
 #include "spi.h"
 
-#define CS_PORT SPI3_CS_GPIO_Port
-#define CS_PIN SPI3_CS_Pin
-#define CS_HIGH HAL_GPIO_WritePin(CS_PORT,CS_PIN,1)
-#define CS_LOW HAL_GPIO_WritePin(CS_PORT,CS_PIN,0)
+#ifndef CS_GPIO_Port
+#define CS_GPIO_Port SPI3_CS_GPIO_Port
+#endif
+#ifndef CS_Pin
+#define CS_Pin SPI3_CS_Pin
+#endif
+#define CS_HIGH HAL_GPIO_WritePin(CS_GPIO_Port,CS_Pin,1)
+#define CS_LOW HAL_GPIO_WritePin(CS_GPIO_Port,CS_Pin,0)
 #define USE_SPI hspi3
 
 #define ICM42605_DEVICE_CONFIG               (0x11)
