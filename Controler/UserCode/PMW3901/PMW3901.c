@@ -17,11 +17,11 @@ uint8_t PMW3901_Init(PMW3901 *pmw3901) {
         return 1;
     HAL_Delay(100);
     if (MY_SPI_Read_Byte(PMW3901_REG_Product_ID, &Data) || Data != 0x49) {
-        printf("%d\n", Data);
+        printf("0x%x\n", Data);
         return 1;
     }
     if (MY_SPI_Read_Byte(PMW3901_REG_Inverse_Product_ID, &Data) || Data != 0xB6) {
-        printf("%d\n", Data);
+        printf("0x%x\n", Data);
         return 1;
     }
     PMW3901_Read_Data(pmw3901);
