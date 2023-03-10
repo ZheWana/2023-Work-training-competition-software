@@ -199,8 +199,8 @@ void SerialOutputEntry(void *argument)
 //        printf("%f,", CarInfo.psi[0]);
 //        printf("%f,", CarInfo.mpPid[0].ctr.aim);
 
-        printf("%f,", CarInfo.yaw);
-        printf("%f,", CarInfo.aPid.ctr.aim);
+//        printf("%f,", CarInfo.yaw);
+//        printf("%f,", CarInfo.aPid.ctr.aim);
 
 //        printf("%f,", CarInfo.curX);
 //        printf("%f,", CarInfo.cpPidX.ctr.aim);
@@ -208,6 +208,10 @@ void SerialOutputEntry(void *argument)
 //        printf("%f,", CarInfo.hmc.Mx);
 //        printf("%f,", CarInfo.hmc.My);
 //        printf("%f,", ToDig(CarInfo.yaw));
+
+        printf("%f,", CarInfo.icm.ax);
+        printf("%f,", CarInfo.icm.ay);
+        printf("%f,", CarInfo.icm.az);
 
         printf("\n");
     }
@@ -249,32 +253,32 @@ void ScreenRefreshEntry(void *argument)
         float fps = 1000.0f / (HAL_GetTick() - pretick);
 
         pretick = HAL_GetTick();
-        sprintf(buff, "FPS:%.3f\n", fps);
-        LCD_StringLayout(128, buff, Font_7x10, ST7735_BLACK, ST7735_WHITE);
-
-//        for (int i = 0; i < 16; i++) {
-//            buff[i] = CarInfo.infrared & (1 << i) ? '1' : '0';
-//        }
-//        buff[16] = '\0';
+//        sprintf(buff, "FPS:%.3f\n", fps);
 //        LCD_StringLayout(128, buff, Font_7x10, ST7735_BLACK, ST7735_WHITE);
-//        for (int i = 0; i < 16; i++) {
-//            buff[i] = CarInfo.infrared & (1 << (i + 16)) ? '1' : '0';
-//        }
-//        buff[16] = '\0';
-//        LCD_StringLayout(128, buff, Font_7x10, ST7735_BLACK, ST7735_WHITE);
-        sprintf(buff, CarInfo.yaw > 0 ? "Yaw: %.3f\n" : "Yaw:%.3f\n", ToDig(CarInfo.yaw));
-        LCD_StringLayout(128, buff, Font_11x18, ST7735_BLACK, ST7735_WHITE);
-//        sprintf(buff, "dx:%.3f\n", CarInfo.dx);
-//        LCD_StringLayout(128, buff, Font_7x10, ST7735_BLACK, ST7735_WHITE);
-//        sprintf(buff, "dy:%.3f\n", CarInfo.dy);
-//        LCD_StringLayout(128, buff, Font_7x10, ST7735_BLACK, ST7735_WHITE);
-        sprintf(buff, "X:%.3f\n", CarInfo.curX);
-        LCD_StringLayout(128, buff, Font_11x18, ST7735_BLACK, ST7735_WHITE);
-        sprintf(buff, "Y:%.3f\n", CarInfo.curY);
-        LCD_StringLayout(128, buff, Font_11x18, ST7735_BLACK, ST7735_WHITE);
-
-        // End of page
-        LCD_StringLayout(LCD_EOP);
+//
+////        for (int i = 0; i < 16; i++) {
+////            buff[i] = CarInfo.infrared & (1 << i) ? '1' : '0';
+////        }
+////        buff[16] = '\0';
+////        LCD_StringLayout(128, buff, Font_7x10, ST7735_BLACK, ST7735_WHITE);
+////        for (int i = 0; i < 16; i++) {
+////            buff[i] = CarInfo.infrared & (1 << (i + 16)) ? '1' : '0';
+////        }
+////        buff[16] = '\0';
+////        LCD_StringLayout(128, buff, Font_7x10, ST7735_BLACK, ST7735_WHITE);
+//        sprintf(buff, CarInfo.yaw > 0 ? "Yaw: %.3f\n" : "Yaw:%.3f\n", ToDig(CarInfo.yaw));
+//        LCD_StringLayout(128, buff, Font_11x18, ST7735_BLACK, ST7735_WHITE);
+////        sprintf(buff, "dx:%.3f\n", CarInfo.dx);
+////        LCD_StringLayout(128, buff, Font_7x10, ST7735_BLACK, ST7735_WHITE);
+////        sprintf(buff, "dy:%.3f\n", CarInfo.dy);
+////        LCD_StringLayout(128, buff, Font_7x10, ST7735_BLACK, ST7735_WHITE);
+//        sprintf(buff, "X:%.3f\n", CarInfo.curX);
+//        LCD_StringLayout(128, buff, Font_11x18, ST7735_BLACK, ST7735_WHITE);
+//        sprintf(buff, "Y:%.3f\n", CarInfo.curY);
+//        LCD_StringLayout(128, buff, Font_11x18, ST7735_BLACK, ST7735_WHITE);
+//
+//        // End of page
+//        LCD_StringLayout(LCD_EOP);
     }
   /* USER CODE END ScreenRefreshEntry */
 }

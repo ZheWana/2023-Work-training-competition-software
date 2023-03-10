@@ -161,8 +161,8 @@ int main(void)
 
     // Sensor Init
     int res = 0;
-    if (PMW3901_Init(&CarInfo.pmw) != 0)
-        while (1);
+//    if (PMW3901_Init(&CarInfo.pmw) != 0)
+//        while (1);
     while (QMC5883_Init() != 0);
 
     for (int i = 0; i < 100; i++) {
@@ -350,7 +350,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 //
 //        // Get gyro
         ICM42605_GetData(&CarInfo.icm, ICM_MODE_ACC | ICM_MODE_GYRO);
-        printf("data:%f,%f,%f\n", CarInfo.icm.ax, CarInfo.icm.ay, CarInfo.icm.az);
 
         static int cnt = 0;
         const int period = 10;
