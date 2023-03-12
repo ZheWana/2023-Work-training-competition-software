@@ -89,6 +89,7 @@ uint8_t ICM42605_Init(void) {
 //    reglog(ICM42605_WHO_AM_I);
     data[0] = spi_read_byte(ICM42605_WHO_AM_I);
     HAL_Delay(10);
+    printf("ICM42605_WHO_AM_I:%x\n", data[0]);
     if (data[0] == 0) return 1;
 
     data[0] = 0;//bank0
@@ -109,7 +110,7 @@ uint8_t ICM42605_Init(void) {
         return 5;
     HAL_Delay(10);
     //角速度计加速度计配置
-    data[0] = 0b00000011;  //2000dps
+    data[0] = 0b00000110;  //2000dps
     if (spi_write_byte(ICM42605_GYRO_CONFIG0, data[0]) == 0)
         return 6;
     HAL_Delay(10);

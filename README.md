@@ -19,9 +19,12 @@ STM32H750VBT6为核心的控制器；
 |       UART8        |  总线舵机   |
 |       UART5        |    调试     |
 |      UART4&7       |    预留     |
+|        SPI1        |   PMW3901   |
 |        SPI4        |    屏幕     |
 |        SPI3        |     ICM     |
 |        I2C1        |     QMC     |
+
+
 
 #### 开发环境
 

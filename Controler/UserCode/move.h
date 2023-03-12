@@ -19,6 +19,8 @@ void MecanumMove(float disY, float disX, float spdLimit, bool waitUntilStop);
 
 void MecanumSpeedSet(float spdY, float spdX);
 
+void MecanumSpeedSetPolar(float r, float theta);
+
 void MecanumRotate(float dig, float spdLimit, bool waitUntilStop);
 
 void MapSpeedSet(float spdY, float spdX);

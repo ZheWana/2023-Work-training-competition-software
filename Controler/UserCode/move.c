@@ -9,6 +9,7 @@
 #include "utils.h"
 #include "cmsis_os2.h"
 
+
 /**
  * @brief 车体坐标系下速度控制
  * @param spdY Y轴速度
@@ -24,10 +25,29 @@ void MecanumSpeedSet(float spdY, float spdX) {
         }
     }
 
-    CarInfo.msPid[0].ctr.aim = spdY + spdX;
-    CarInfo.msPid[1].ctr.aim = spdY - spdX;
-    CarInfo.msPid[2].ctr.aim = spdY - spdX;
-    CarInfo.msPid[3].ctr.aim = spdY + spdX;
+    CarInfo.spdAim[0] = spdY + spdX;
+    CarInfo.spdAim[1] = spdY - spdX;
+    CarInfo.spdAim[2] = spdY - spdX;
+    CarInfo.spdAim[3] = spdY + spdX;
+}
+
+void MecanumSpeedSetPolar(float r, float theta) {
+    // 验证并修改闭环模式
+    if (CarInfo.mPsiCtr) {
+        MotorPositionLoopSet(0);
+        for (int i = 0; i < 4; i++) {
+            PID_Reset(&CarInfo.msPid[i]);
+            PID_Reset(&CarInfo.mpPid[i]);
+        }
+    }
+
+    float spdX = r * cosf(theta);
+    float spdY = r * sinf(theta);
+
+    CarInfo.spdAim[0] = spdY + spdX;
+    CarInfo.spdAim[1] = spdY - spdX;
+    CarInfo.spdAim[2] = spdY - spdX;
+    CarInfo.spdAim[3] = spdY + spdX;
 }
 
 /**
@@ -50,26 +70,33 @@ void MecanumMove(float disY, float disX, float spdLimit, bool waitUntilStop) {
         }
     }
 
-    // 速度环限速
-    if (spdLimit == 0)
-        CarInfo.spdLimit = 0x7FFF;
-    else
-        CarInfo.spdLimit = spdLimit;
-
     float plusY = disY * MOVE_Y_Grid;
     float plusX = disX * MOVE_X_Grid;
 
+    // 速度环限速
+    for (int i = 0; i < 4; i++) {
+        if (spdLimit == 0)
+            CarInfo.spdLimit[i] = 0x7FFF;
+        else {
+            if (i == 0 || i == 1)
+                CarInfo.spdLimit[i] = spdLimit;
+            else
+                CarInfo.spdLimit[i] = spdLimit * fabsf(plusY - plusX) / fabsf(plusY + plusX);
+
+        }
+    }
+
     aimPsi[0] = CarInfo.mpPid[0].ctr.aim + plusY + plusX;
-    aimPsi[1] = CarInfo.mpPid[1].ctr.aim + plusY - plusX;
+    aimPsi[1] = CarInfo.mpPid[1].ctr.aim + plusY + plusX;
     aimPsi[2] = CarInfo.mpPid[2].ctr.aim + plusY - plusX;
-    aimPsi[3] = CarInfo.mpPid[3].ctr.aim + plusY + plusX;
+    aimPsi[3] = CarInfo.mpPid[3].ctr.aim + plusY - plusX;
 
     if (CarInfo.firstPsiLoop) {
         CarInfo.firstPsiLoop = 0;
         aimPsi[0] = CarInfo.mpPid[0].ctr.aim + plusY + plusX;
-        aimPsi[1] = CarInfo.mpPid[1].ctr.aim + plusY - plusX;
+        aimPsi[1] = CarInfo.mpPid[1].ctr.aim + plusY + plusX;
         aimPsi[2] = CarInfo.mpPid[2].ctr.aim + plusY - plusX;
-        aimPsi[3] = CarInfo.mpPid[3].ctr.aim + plusY + plusX;
+        aimPsi[3] = CarInfo.mpPid[3].ctr.aim + plusY - plusX;
     }
 
     for (int i = 0; i < 4; i++)
@@ -106,22 +133,24 @@ void MecanumRotate(float dig, float spdLimit, bool waitUntilStop) {
     }
 
     // 速度环限速
-    if (spdLimit == 0)
-        CarInfo.spdLimit = 0x7FFF;
-    else
-        CarInfo.spdLimit = spdLimit;
+    for (int i = 0; i < 4; i++) {
+        if (spdLimit == 0)
+            CarInfo.spdLimit[i] = 0x7FFF;
+        else
+            CarInfo.spdLimit[i] = spdLimit;
+    }
 
     float plusRotate;
 
-    aimPsi[0] = CarInfo.mpPid[0].ctr.aim - dig;
-    aimPsi[1] = CarInfo.mpPid[1].ctr.aim + dig;
+    aimPsi[0] = CarInfo.mpPid[0].ctr.aim + dig;
+    aimPsi[1] = CarInfo.mpPid[1].ctr.aim - dig;
     aimPsi[2] = CarInfo.mpPid[2].ctr.aim - dig;
     aimPsi[3] = CarInfo.mpPid[3].ctr.aim + dig;
 
     if (CarInfo.firstPsiLoop) {
         CarInfo.firstPsiLoop = 0;
-        aimPsi[0] = CarInfo.mpPid[0].ctr.aim - dig;
-        aimPsi[1] = CarInfo.mpPid[1].ctr.aim + dig;
+        aimPsi[0] = CarInfo.mpPid[0].ctr.aim + dig;
+        aimPsi[1] = CarInfo.mpPid[1].ctr.aim - dig;
         aimPsi[2] = CarInfo.mpPid[2].ctr.aim - dig;
         aimPsi[3] = CarInfo.mpPid[3].ctr.aim + dig;
     }

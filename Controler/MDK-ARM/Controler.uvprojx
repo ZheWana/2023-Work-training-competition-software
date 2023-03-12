@@ -314,7 +314,7 @@
           </ArmAdsMisc>
           <Cads>
             <interw>1</interw>
-            <Optim>2</Optim>
+            <Optim>1</Optim>
             <oTime>0</oTime>
             <SplitLS>0</SplitLS>
             <OneElfS>1</OneElfS>
@@ -683,6 +683,26 @@
               <FileName>ICM42605.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\UserCode\ICM42605\ICM42605.c</FilePath>
+            </File>
+            <File>
+              <FileName>imuFusion.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\UserCode\imuFusion\imuFusion.c</FilePath>
+            </File>
+            <File>
+              <FileName>imuFusion.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\UserCode\imuFusion\imuFusion.h</FilePath>
+            </File>
+            <File>
+              <FileName>filter.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\UserCode\Filter\filter.c</FilePath>
+            </File>
+            <File>
+              <FileName>filter.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\UserCode\Filter\filter.h</FilePath>
             </File>
           </Files>
         </Group>

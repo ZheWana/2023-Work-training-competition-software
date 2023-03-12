@@ -112,18 +112,20 @@ void __RunDropState(void) {
 
 CCB_Typedef CarInfo = {
         .mPsiCtr = 0,
-        .cPsiCtr = 0,
-        .spdLimit = 20,
+        .cPsiCtr = 1,
+        .spdLimit = {20, 20, 20, 20},
         .order[Red] = 1,
         .order[Blue] = 2,
         .order[Green] = 3,
         .mainState = mStart,
         .fetchState = fStart,
         .dropState = dStart,
+        .SerialOutputEnable = 1,
         .RunMainState = __RunMainState,
         .RunFetchState = __RunFetchState,
         .RunDropState = __RunDropState,
         .aPidPeriod = 50,
+//        .spdAim = {20, 20, 20, 20},
 };
 Shell shell;
 

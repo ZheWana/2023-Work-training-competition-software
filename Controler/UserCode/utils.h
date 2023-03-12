@@ -48,14 +48,15 @@
 typedef struct CarControlBlock {
     // 电机控制相关
     int16_t spd[4];
+    float spdAim[4];
     Pid_t msPid[4]; // motor speed pid
     float psi[4];
     Pid_t mpPid[4]; // motor position pid
     float mpPIDout[4];
     float spdStep;
-    float spdLimit;
-    bool mPsiCtr;
-    bool firstPsiLoop;
+    float spdLimit[4];
+    bool mPsiCtr: 1;// 启用电机位置环控制标志位
+    bool firstPsiLoop: 1;// 首次进入位置环标志
 
     // 整车控制相关
     PMW3901 pmw;
@@ -63,7 +64,8 @@ typedef struct CarControlBlock {
     float curX, curY;
     Pid_t cpPidX, cpPidY;// Car position pid
     float spdX, spdY;
-    bool cPsiCtr;
+    bool cPsiCtr: 1;
+    bool SerialOutputEnable: 1;
 
     // 边界传感器数据
     uint32_t infrared;
@@ -73,6 +75,9 @@ typedef struct CarControlBlock {
     icmData_t icm;
     float yaw;// 弧度制
     float initYawOffset;
+    float initGxOffset;
+    float initGyOffset;
+    float initGzOffset;
     uint8_t isYawInited: 1;
     uint32_t isCarMoving;// 定时器中断中监测整车是否静止，用作步骤规划
 
@@ -96,7 +101,8 @@ typedef struct CarControlBlock {
     } dropState;
 
     // PID姿态控制
-    Pid_t aPid;
+    Pid_t avPid;// 角速度闭环
+    Pid_t aPid;// 角度闭环
     float aPidOut;
     const int aPidPeriod;
     enum aPidLock {
