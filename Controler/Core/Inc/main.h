@@ -98,7 +98,7 @@ void msgLog(const char *format, ...);
 #define PMW3901_CS_Pin GPIO_PIN_7
 #define PMW3901_CS_GPIO_Port GPIOD
 /* USER CODE BEGIN Private defines */
-#define Key_PollingPeriod               (10)
+#define Key_PollingPeriod               (1)// soft timer
 #define UC_PollingPeriod                (20)
 #define UC_TimerResetPeriod             (10000)
 #define SupportServoID                  (6)

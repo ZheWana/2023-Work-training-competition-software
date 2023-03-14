@@ -8,7 +8,9 @@
 #include "key.h"
 #include "spi.h"
 #include "utils.h"
+#include "printf.h"
 #include <stddef.h>
+#include "cmsis_os2.h"
 #include "CommonKey/comKey.h"
 #include "LetterShell/shell.h"
 #include "./Compass/QMC5883L.h"
@@ -16,9 +18,12 @@
 #include "SerialParaChanger/SPChanger.h"
 #include "LobotSerialServo/LobotSerialServo.h"
 
+extern osTimerId_t KeyTimerHandle;
+
 void __RunMainState(void) {
-    int i = 0;
+
     switch (CarInfo.mainState) {
+        osStatus_t status;
         case mStart:
             // TODO:
             //  升降电机初始化
@@ -26,21 +31,16 @@ void __RunMainState(void) {
 
             //  按键按下初始化yaw坐标系
             // Hard Init
-            QMC5883_Init();
-//            ST7735_Backlight_On();
-//            ST7735_Init();
 
             // Soft Init
-            KeyInit();
 
+            CarInfo.mainState = mScan;
             break;
         case mScan:// 扫描二维码,记录信息
             // TODO:
             //  出库,到达定点后发出Rdy信号
             //  接收摄像头扫描结果
-            HAL_Delay(2000);
-
-            CarInfo.mainState = mIdentify;
+            while (1);
             break;
         case mIdentify:
             // TODO:
