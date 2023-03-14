@@ -61,38 +61,48 @@
 /* USER CODE BEGIN Variables */
 
 /* USER CODE END Variables */
-/* Definitions for LEDcontrol */
-osThreadId_t LEDcontrolHandle;
-const osThreadAttr_t LEDcontrol_attributes = {
-        .name = "LEDcontrol",
-        .stack_size = 128 * 4,
-        .priority = (osPriority_t) osPriorityLow,
+/* Definitions for IOcontrol */
+osThreadId_t IOcontrolHandle;
+const osThreadAttr_t IOcontrol_attributes = {
+  .name = "IOcontrol",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityLow,
 };
 /* Definitions for SerialOutput */
 osThreadId_t SerialOutputHandle;
 const osThreadAttr_t SerialOutput_attributes = {
-        .name = "SerialOutput",
-        .stack_size = 512 * 4,
-        .priority = (osPriority_t) osPriorityLow,
+  .name = "SerialOutput",
+  .stack_size = 512 * 4,
+  .priority = (osPriority_t) osPriorityLow,
 };
 /* Definitions for StateMachine */
 osThreadId_t StateMachineHandle;
 const osThreadAttr_t StateMachine_attributes = {
-        .name = "StateMachine",
-        .stack_size = 128 * 4,
-        .priority = (osPriority_t) osPriorityLow,
+  .name = "StateMachine",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityLow,
 };
 /* Definitions for ScreenRefresh */
 osThreadId_t ScreenRefreshHandle;
 const osThreadAttr_t ScreenRefresh_attributes = {
-        .name = "ScreenRefresh",
-        .stack_size = 512 * 4,
-        .priority = (osPriority_t) osPriorityLow,
+  .name = "ScreenRefresh",
+  .stack_size = 512 * 4,
+  .priority = (osPriority_t) osPriorityLow,
+};
+/* Definitions for SensorMessageQueue */
+osMessageQueueId_t SensorMessageQueueHandle;
+const osMessageQueueAttr_t SensorMessageQueue_attributes = {
+  .name = "SensorMessageQueue"
+};
+/* Definitions for KeyTimer */
+osTimerId_t KeyTimerHandle;
+const osTimerAttr_t KeyTimer_attributes = {
+  .name = "KeyTimer"
 };
 /* Definitions for bQueuePut */
 osSemaphoreId_t bQueuePutHandle;
 const osSemaphoreAttr_t bQueuePut_attributes = {
-        .name = "bQueuePut"
+  .name = "bQueuePut"
 };
 
 /* Private function prototypes -----------------------------------------------*/
@@ -100,13 +110,11 @@ const osSemaphoreAttr_t bQueuePut_attributes = {
 
 /* USER CODE END FunctionPrototypes */
 
-void LEDcontrolEntry(void *argument);
-
+void IOcontrolEntry(void *argument);
 void SerialOutputEntry(void *argument);
-
 void StateMachineEntry(void *argument);
-
 void ScreenRefreshEntry(void *argument);
+void KeyTimerCallback(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -116,73 +124,80 @@ void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
   * @retval None
   */
 void MX_FREERTOS_Init(void) {
-    /* USER CODE BEGIN Init */
+  /* USER CODE BEGIN Init */
 
-    /* USER CODE END Init */
+  /* USER CODE END Init */
 
-    /* USER CODE BEGIN RTOS_MUTEX */
+  /* USER CODE BEGIN RTOS_MUTEX */
     /* add mutexes, ... */
-    /* USER CODE END RTOS_MUTEX */
+  /* USER CODE END RTOS_MUTEX */
 
-    /* Create the semaphores(s) */
-    /* creation of bQueuePut */
-    bQueuePutHandle = osSemaphoreNew(1, 1, &bQueuePut_attributes);
+  /* Create the semaphores(s) */
+  /* creation of bQueuePut */
+  bQueuePutHandle = osSemaphoreNew(1, 1, &bQueuePut_attributes);
 
-    /* USER CODE BEGIN RTOS_SEMAPHORES */
+  /* USER CODE BEGIN RTOS_SEMAPHORES */
     /* add semaphores, ... */
-    /* USER CODE END RTOS_SEMAPHORES */
+  /* USER CODE END RTOS_SEMAPHORES */
 
-    /* USER CODE BEGIN RTOS_TIMERS */
+  /* Create the timer(s) */
+  /* creation of KeyTimer */
+  KeyTimerHandle = osTimerNew(KeyTimerCallback, osTimerPeriodic, NULL, &KeyTimer_attributes);
+
+  /* USER CODE BEGIN RTOS_TIMERS */
     /* start timers, add new ones, ... */
-    /* USER CODE END RTOS_TIMERS */
+  /* USER CODE END RTOS_TIMERS */
 
-    /* USER CODE BEGIN RTOS_QUEUES */
+  /* Create the queue(s) */
+  /* creation of SensorMessageQueue */
+  SensorMessageQueueHandle = osMessageQueueNew (16, sizeof(uint16_t), &SensorMessageQueue_attributes);
+
+  /* USER CODE BEGIN RTOS_QUEUES */
     /* add queues, ... */
-    /* USER CODE END RTOS_QUEUES */
+  /* USER CODE END RTOS_QUEUES */
 
-    /* Create the thread(s) */
-    /* creation of LEDcontrol */
-    LEDcontrolHandle = osThreadNew(LEDcontrolEntry, NULL, &LEDcontrol_attributes);
+  /* Create the thread(s) */
+  /* creation of IOcontrol */
+  IOcontrolHandle = osThreadNew(IOcontrolEntry, NULL, &IOcontrol_attributes);
 
-    /* creation of SerialOutput */
-    SerialOutputHandle = osThreadNew(SerialOutputEntry, NULL, &SerialOutput_attributes);
+  /* creation of SerialOutput */
+  SerialOutputHandle = osThreadNew(SerialOutputEntry, NULL, &SerialOutput_attributes);
 
-    /* creation of StateMachine */
-    StateMachineHandle = osThreadNew(StateMachineEntry, NULL, &StateMachine_attributes);
+  /* creation of StateMachine */
+  StateMachineHandle = osThreadNew(StateMachineEntry, NULL, &StateMachine_attributes);
 
-    /* creation of ScreenRefresh */
-    ScreenRefreshHandle = osThreadNew(ScreenRefreshEntry, NULL, &ScreenRefresh_attributes);
+  /* creation of ScreenRefresh */
+  ScreenRefreshHandle = osThreadNew(ScreenRefreshEntry, NULL, &ScreenRefresh_attributes);
 
-    /* USER CODE BEGIN RTOS_THREADS */
+  /* USER CODE BEGIN RTOS_THREADS */
     /* add threads, ... */
-    /* USER CODE END RTOS_THREADS */
+  /* USER CODE END RTOS_THREADS */
 
-    /* USER CODE BEGIN RTOS_EVENTS */
+  /* USER CODE BEGIN RTOS_EVENTS */
     /* add events, ... */
-    /* USER CODE END RTOS_EVENTS */
+  /* USER CODE END RTOS_EVENTS */
 
 }
 
-/* USER CODE BEGIN Header_LEDcontrolEntry */
+/* USER CODE BEGIN Header_IOcontrolEntry */
 /**
-  * @brief  Function implementing the LEDcontrol thread.
+  * @brief  Function implementing the IOcontrol thread.
   * @param  argument: Not used
   * @retval None
   */
-/* USER CODE END Header_LEDcontrolEntry */
-void LEDcontrolEntry(void *argument) {
-    /* USER CODE BEGIN LEDcontrolEntry */
+/* USER CODE END Header_IOcontrolEntry */
+void IOcontrolEntry(void *argument)
+{
+  /* USER CODE BEGIN IOcontrolEntry */
     /* Infinite loop */
     for (;;) {
-        HAL_GPIO_WritePin(LED_System_GPIO_Port, LED_System_Pin, GPIO_PIN_SET);
+        HAL_GPIO_WritePin(LED_System_GPIO_Port, LED_System_Pin, 1);
         osDelay(50);
-        HAL_GPIO_WritePin(LED_System_GPIO_Port, LED_System_Pin, GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(LED_System_GPIO_Port, LED_System_Pin, 0);
         osDelay(950);
-        if (osThreadGetState(SerialOutputHandle) == osThreadBlocked && CarInfo.SerialOutputEnable) {
-            osThreadResume(SerialOutputHandle);
-        }
+        if (CarInfo.SerialOutputEnable)osThreadResume(SerialOutputHandle);
     }
-    /* USER CODE END LEDcontrolEntry */
+  /* USER CODE END IOcontrolEntry */
 }
 
 /* USER CODE BEGIN Header_SerialOutputEntry */
@@ -192,8 +207,9 @@ void LEDcontrolEntry(void *argument) {
 * @retval None
 */
 /* USER CODE END Header_SerialOutputEntry */
-void SerialOutputEntry(void *argument) {
-    /* USER CODE BEGIN SerialOutputEntry */
+void SerialOutputEntry(void *argument)
+{
+  /* USER CODE BEGIN SerialOutputEntry */
     /* Infinite loop */
     for (;;) {
         if (!CarInfo.SerialOutputEnable)osThreadSuspend(SerialOutputHandle);
@@ -208,30 +224,35 @@ void SerialOutputEntry(void *argument) {
 //        printf("%f,", CarInfo.psi[0]);
 //        printf("%f,", CarInfo.mpPid[0].ctr.aim);
 //
-        printf("%f,", CarInfo.yaw);
-        printf("%f,", CarInfo.avPid.ctr.aim);
+//        printf("%f,", CarInfo.yaw);
+//        printf("%f,", CarInfo.avPid.ctr.aim);
 
-//        printf("%f,", CarInfo.curX);
-//        printf("%f,", CarInfo.cpPidX.ctr.aim);
-//        printf("%f,", CarInfo.curY);
-//        printf("%f,", CarInfo.cpPidY.ctr.aim);
-//
+        printf("%f,", CarInfo.curX);
+        printf("%f,", CarInfo.cpPidX.ctr.aim);
+        printf("%f,", CarInfo.curY);
+        printf("%f,", CarInfo.cpPidY.ctr.aim);
+
+//        printf("\r\n");
+//        for (int i = 0; i < 32; i++) {
+//            printf("%d", CarInfo.inf & (1 << i) ? 1 : 0);
+//        }
+
 //        printf("%.3f,", CarInfo.hmc.Mx);
 //        printf("%.3f,", CarInfo.hmc.My);
 //        printf("%.3f,", CarInfo.icm.gx);
 //        printf("%.3f,", CarInfo.icm.gy);
 //        printf("%.3f,", CarInfo.icm.gz);
-//
+
 //        printf("%f,", CarInfo.icm.ax);
 //        printf("%f,", CarInfo.icm.ay);
 //        printf("%f,", CarInfo.icm.az);
 //        printf("%f,", CarInfo.icm.gx);
 //        printf("%f,", CarInfo.icm.gy);
-        printf("%f,", CarInfo.icm.gz);
-//
-        printf("\n");
+//        printf("%f,", CarInfo.icm.gz);
+
+        printf("\r\n");
     }
-    /* USER CODE END SerialOutputEntry */
+  /* USER CODE END SerialOutputEntry */
 }
 
 /* USER CODE BEGIN Header_StateMachineEntry */
@@ -241,14 +262,15 @@ void SerialOutputEntry(void *argument) {
 * @retval None
 */
 /* USER CODE END Header_StateMachineEntry */
-void StateMachineEntry(void *argument) {
-    /* USER CODE BEGIN StateMachineEntry */
+void StateMachineEntry(void *argument)
+{
+  /* USER CODE BEGIN StateMachineEntry */
     /* Infinite loop */
     for (;;) {
-//        MecanumRotate(10000000,10,1);
+        CarInfo.RunMainState();
         osDelay(1);
     }
-    /* USER CODE END StateMachineEntry */
+  /* USER CODE END StateMachineEntry */
 }
 
 /* USER CODE BEGIN Header_ScreenRefreshEntry */
@@ -258,33 +280,33 @@ void StateMachineEntry(void *argument) {
 * @retval None
 */
 /* USER CODE END Header_ScreenRefreshEntry */
-void ScreenRefreshEntry(void *argument) {
-    /* USER CODE BEGIN ScreenRefreshEntry */
+void ScreenRefreshEntry(void *argument)
+{
+  /* USER CODE BEGIN ScreenRefreshEntry */
     /* Infinite loop */
     for (;;) {
         char buff[64];
         static uint32_t pretick = 0;
         float fps = 1000.0f / (HAL_GetTick() - pretick);
-       pretick = HAL_GetTick();
+        pretick = HAL_GetTick();
         sprintf(buff, "FPS:%.3f\n", fps);
         LCD_StringLayout(128, buff, Font_7x10, ST7735_BLACK, ST7735_WHITE);
 
-//        for (int i = 0; i < 16; i++) {
-//            buff[i] = CarInfo.infrared & (1 << i) ? '1' : '0';
-//        }
-//        buff[16] = '\0';
-//        LCD_StringLayout(128, buff, Font_7x10, ST7735_BLACK, ST7735_WHITE);
-//        for (int i = 0; i < 16; i++) {
-//            buff[i] = CarInfo.infrared & (1 << (i + 16)) ? '1' : '0';
-//        }
-//        buff[16] = '\0';
-//        LCD_StringLayout(128, buff, Font_7x10, ST7735_BLACK, ST7735_WHITE);
+        for (int i = 0; i < 16; i++) {
+            buff[i] = CarInfo.inf.rawData & (1 << i) ? '1' : '0';
+        }
+        buff[16] = '\0';
+        LCD_StringLayout(128, buff, Font_7x10, ST7735_BLACK, ST7735_WHITE);
+
+        for (int i = 0; i < 16; i++) {
+            buff[i] = CarInfo.inf.rawData & (1 << (i + 16)) ? '1' : '0';
+        }
+        buff[16] = '\0';
+        LCD_StringLayout(128, buff, Font_7x10, ST7735_BLACK, ST7735_WHITE);
+
         sprintf(buff, CarInfo.yaw > 0 ? "Yaw: %.3f\n" : "Yaw:%.3f\n", ToDig(CarInfo.yaw));
         LCD_StringLayout(128, buff, Font_11x18, ST7735_BLACK, ST7735_WHITE);
-//        sprintf(buff, "dx:%.3f\n", CarInfo.dx);
-//        LCD_StringLayout(128, buff, Font_7x10, ST7735_BLACK, ST7735_WHITE);
-//        sprintf(buff, "dy:%.3f\n", CarInfo.dy);
-//        LCD_StringLayout(128, buff, Font_7x10, ST7735_BLACK, ST7735_WHITE);
+
         sprintf(buff, "X:%.3f\n", CarInfo.curX);
         LCD_StringLayout(128, buff, Font_11x18, ST7735_BLACK, ST7735_WHITE);
         sprintf(buff, "Y:%.3f\n", CarInfo.curY);
@@ -293,7 +315,14 @@ void ScreenRefreshEntry(void *argument) {
         // End of page
         LCD_StringLayout(LCD_EOP);
     }
-    /* USER CODE END ScreenRefreshEntry */
+  /* USER CODE END ScreenRefreshEntry */
+}
+
+/* KeyTimerCallback function */
+void KeyTimerCallback(void *argument)
+{
+  /* USER CODE BEGIN KeyTimerCallback */
+  /* USER CODE END KeyTimerCallback */
 }
 
 /* Private application code --------------------------------------------------*/
