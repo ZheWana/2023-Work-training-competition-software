@@ -379,6 +379,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
         static int16_t preCNT[4];
         static int16_t sumX, sumY;
 
+        // Handle Key Event
+        ComKey_Handler();
+
         // Get Infrared
         HC165_Get_Data(&CarInfo.inf.rawData);
         {// Byte inversion
