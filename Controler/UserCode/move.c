@@ -26,9 +26,9 @@ void MecanumSpeedSet(float spdY, float spdX) {
     }
 
     CarInfo.spdAim[0] = spdY + spdX;
-    CarInfo.spdAim[1] = spdY - spdX;
+    CarInfo.spdAim[1] = spdY + spdX;
     CarInfo.spdAim[2] = spdY - spdX;
-    CarInfo.spdAim[3] = spdY + spdX;
+    CarInfo.spdAim[3] = spdY - spdX;
 }
 
 void MecanumSpeedSetPolar(float r, float theta) {
@@ -45,9 +45,9 @@ void MecanumSpeedSetPolar(float r, float theta) {
     float spdY = r * sinf(theta);
 
     CarInfo.spdAim[0] = spdY + spdX;
-    CarInfo.spdAim[1] = spdY - spdX;
+    CarInfo.spdAim[1] = spdY + spdX;
     CarInfo.spdAim[2] = spdY - spdX;
-    CarInfo.spdAim[3] = spdY + spdX;
+    CarInfo.spdAim[3] = spdY - spdX;
 }
 
 /**
