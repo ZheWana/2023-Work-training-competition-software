@@ -62,12 +62,6 @@ typedef struct CarControlBlock {
     bool SerialOutputEnable: 1;
 
     // 边界传感器数据
-    enum {
-        inFront,// 0 -7 :front（inverse）
-        inLeft,// 8 -15:left(inverse)
-        inBack,// 16-23:back
-        inRight,// 24-31:right
-    };
     union boundData {
         uint32_t rawData;
         uint8_t data[4];
@@ -121,6 +115,13 @@ typedef struct CarControlBlock {
 
     void (*RunDropState)(void);
 } CCB_Typedef;
+
+enum {
+    inFront,// 0 -7 :front（inverse）
+    inLeft,// 8 -15:left(inverse)
+    inBack,// 16-23:back
+    inRight,// 24-31:right
+};
 
 extern CCB_Typedef CarInfo;
 extern Shell shell;
