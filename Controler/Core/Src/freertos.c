@@ -40,6 +40,7 @@
 #include "ST7735-HAL/st7735.h"
 #include "SerialParaChanger/SPChanger.h"
 #include "LobotSerialServo/LobotSerialServo.h"
+#include "Filter/filter.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -89,6 +90,13 @@ const osThreadAttr_t ScreenRefresh_attributes = {
   .stack_size = 512 * 4,
   .priority = (osPriority_t) osPriorityLow,
 };
+/* Definitions for SensorHandle */
+osThreadId_t SensorHandleHandle;
+const osThreadAttr_t SensorHandle_attributes = {
+  .name = "SensorHandle",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityLow,
+};
 /* Definitions for SensorMessageQueue */
 osMessageQueueId_t SensorMessageQueueHandle;
 const osMessageQueueAttr_t SensorMessageQueue_attributes = {
@@ -114,6 +122,7 @@ void IOcontrolEntry(void *argument);
 void SerialOutputEntry(void *argument);
 void StateMachineEntry(void *argument);
 void ScreenRefreshEntry(void *argument);
+void SensorHandleEntry(void *argument);
 void KeyTimerCallback(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
@@ -168,6 +177,9 @@ void MX_FREERTOS_Init(void) {
 
   /* creation of ScreenRefresh */
   ScreenRefreshHandle = osThreadNew(ScreenRefreshEntry, NULL, &ScreenRefresh_attributes);
+
+  /* creation of SensorHandle */
+  SensorHandleHandle = osThreadNew(SensorHandleEntry, NULL, &SensorHandle_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
     /* add threads, ... */
@@ -316,6 +328,68 @@ void ScreenRefreshEntry(void *argument)
         LCD_StringLayout(LCD_EOP);
     }
   /* USER CODE END ScreenRefreshEntry */
+}
+
+/* USER CODE BEGIN Header_SensorHandleEntry */
+/**
+* @brief Function implementing the SensorHandle thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_SensorHandleEntry */
+void SensorHandleEntry(void *argument)
+{
+  /* USER CODE BEGIN SensorHandleEntry */
+    /* Infinite loop */
+    for (;;) {
+        static enum SensorType {
+            sInfrared,
+            sCompass,
+            sGyro,
+            sOptical,
+        } SensorType;
+        static FilterTypedef_t gyroFilter = {0};
+        static FilterTypedef_t yawFilter = {0};
+
+
+        osMessageQueueGet(SensorMessageQueueHandle, &SensorType, 0, osWaitForever);
+
+        switch (SensorType) {
+            case sInfrared: {
+                HC165_Get_Data(&CarInfo.inf.rawData);
+
+                // Byte inversion
+                uint8_t a = 0, b = 0;
+                for (int i = 0; i < 8; i++) {
+                    a |= CarInfo.inf.data[inFront] & (1 << i) ? 1 << (7 - i) : 0;
+                    b |= CarInfo.inf.data[inLeft] & (1 << i) ? 1 << (7 - i) : 0;
+                }
+                CarInfo.inf.data[inFront] = a;
+                CarInfo.inf.data[inLeft] = b;
+            }
+                break;
+            case sCompass:
+                QMC5883_GetData(&CarInfo.hmc);
+                VecRotate(CarInfo.hmc.Mx, CarInfo.hmc.My, CarInfo.initYawOffset);
+                CarInfo.yaw = Filter_MovingAvgf(&yawFilter, atan2f(CarInfo.hmc.Mx, CarInfo.hmc.My));
+                break;
+            case sGyro:
+                ICM42605_GetData(&CarInfo.icm, ICM_MODE_ACC | ICM_MODE_GYRO);
+                CarInfo.icm.gz = Filter_MovingAvgf(&gyroFilter, CarInfo.icm.gz) + 0.08f;
+                break;
+            case sOptical:
+                PMW3901_Read_Data(&CarInfo.pmw);
+                CarInfo.dx = (float) -CarInfo.pmw.deltaX;
+                CarInfo.dy = (float) -CarInfo.pmw.deltaY;
+                VecRotate(CarInfo.dx, CarInfo.dy, CarInfo.yaw);
+                CarInfo.curX += CarInfo.dx;
+                CarInfo.curY += CarInfo.dy;
+                break;
+            default:
+                break;
+        }
+    }
+  /* USER CODE END SensorHandleEntry */
 }
 
 /* KeyTimerCallback function */

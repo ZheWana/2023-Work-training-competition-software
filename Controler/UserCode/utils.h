@@ -125,7 +125,6 @@ typedef struct CarControlBlock {
 extern CCB_Typedef CarInfo;
 extern Shell shell;
 
-
 #define LCD_EOP 0,NULL,Font_7x10,0,0
 
 void LCD_StringLayout(uint16_t maxY, char *buff, FontDef font, uint16_t color, uint16_t bgcolor);

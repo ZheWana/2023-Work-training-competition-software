@@ -64,6 +64,7 @@
 
 /* USER CODE BEGIN PV */
 extern osSemaphoreId_t bQueuePutHandle;
+extern osMessageQueueId_t SensorMessageQueueHandle;
 
 spChanger_t paraKp, paraKi, paraKd;
 fusion_t icmFusion;
@@ -375,6 +376,12 @@ void MPU_Config(void) {
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
     /* USER CODE BEGIN Callback 0 */
     if (htim->Instance == TIM6) {
+        static enum SensorType {
+            sInfrared,
+            sCompass,
+            sGyro,
+            sOptical,
+        } SensorType;
         TIM_TypeDef *TIMx;
         static int16_t preCNT[4];
         static int16_t sumX, sumY;
@@ -383,27 +390,16 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
         ComKey_Handler();
 
         // Get Infrared
-        HC165_Get_Data(&CarInfo.inf.rawData);
-        {// Byte inversion
-            uint8_t a = 0, b = 0;
-            for (int i = 0; i < 8; i++) {
-                a |= CarInfo.inf.data[inFront] & (1 << i) ? 1 << (7 - i) : 0;
-                b |= CarInfo.inf.data[inLeft] & (1 << i) ? 1 << (7 - i) : 0;
-            }
-            CarInfo.inf.data[inFront] = a;
-            CarInfo.inf.data[inLeft] = b;
-        }
+        SensorType = sInfrared;
+        osMessageQueuePut(SensorMessageQueueHandle, &SensorType, 0, 0);
 
         // Get compass
-        static FilterTypedef_t yawFilter = {0};
-        QMC5883_GetData(&CarInfo.hmc);
-        VecRotate(CarInfo.hmc.Mx, CarInfo.hmc.My, CarInfo.initYawOffset);
-        CarInfo.yaw = Filter_MovingAvgf(&yawFilter, atan2f(CarInfo.hmc.Mx, CarInfo.hmc.My));
+        SensorType = sCompass;
+        osMessageQueuePut(SensorMessageQueueHandle, &SensorType, 0, 0);
 
         // Get gyro
-        static FilterTypedef_t gyroFilter = {0};
-        ICM42605_GetData(&CarInfo.icm, ICM_MODE_ACC | ICM_MODE_GYRO);
-        CarInfo.icm.gz = Filter_MovingAvgf(&gyroFilter, CarInfo.icm.gz) + 0.08f;
+        SensorType = sGyro;
+        osMessageQueuePut(SensorMessageQueueHandle, &SensorType, 0, 0);
 
         static int cnt = 0;
         const int period = 10;
@@ -411,12 +407,8 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
             cnt = 0;
 
             // Get position
-            PMW3901_Read_Data(&CarInfo.pmw);
-            CarInfo.dx = (float) -CarInfo.pmw.deltaX;
-            CarInfo.dy = (float) -CarInfo.pmw.deltaY;
-            VecRotate(CarInfo.dx, CarInfo.dy, CarInfo.yaw);
-            CarInfo.curX += CarInfo.dx;
-            CarInfo.curY += CarInfo.dy;
+            SensorType = sOptical;
+            osMessageQueuePut(SensorMessageQueueHandle, &SensorType, 0, 0);
 
             // Get motor speed
             for (int16_t i = 0; i < 4; i++) {
