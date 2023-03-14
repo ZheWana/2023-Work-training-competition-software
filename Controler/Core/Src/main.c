@@ -509,7 +509,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
     /* USER CODE END Callback 0 */
     if (htim->Instance == TIM17) {
         HAL_IncTick();
-        ComKey_Handler();
     }
     /* USER CODE BEGIN Callback 1 */
 
