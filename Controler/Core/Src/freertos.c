@@ -97,6 +97,13 @@ const osThreadAttr_t SensorHandle_attributes = {
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityLow,
 };
+/* Definitions for InfCalOpticalTa */
+osThreadId_t InfCalOpticalTaHandle;
+const osThreadAttr_t InfCalOpticalTa_attributes = {
+  .name = "InfCalOpticalTa",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityLow,
+};
 /* Definitions for SensorMessageQueue */
 osMessageQueueId_t SensorMessageQueueHandle;
 const osMessageQueueAttr_t SensorMessageQueue_attributes = {
@@ -123,6 +130,7 @@ void SerialOutputEntry(void *argument);
 void StateMachineEntry(void *argument);
 void ScreenRefreshEntry(void *argument);
 void SensorHandleEntry(void *argument);
+void InfCalOpticalEntry(void *argument);
 void KeyTimerCallback(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
@@ -180,6 +188,9 @@ void MX_FREERTOS_Init(void) {
 
   /* creation of SensorHandle */
   SensorHandleHandle = osThreadNew(SensorHandleEntry, NULL, &SensorHandle_attributes);
+
+  /* creation of InfCalOpticalTa */
+  InfCalOpticalTaHandle = osThreadNew(InfCalOpticalEntry, NULL, &InfCalOpticalTa_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
     /* add threads, ... */
@@ -280,7 +291,6 @@ void StateMachineEntry(void *argument)
     /* Infinite loop */
     for (;;) {
         CarInfo.RunMainState();
-        osDelay(1);
     }
   /* USER CODE END StateMachineEntry */
 }
@@ -390,6 +400,24 @@ void SensorHandleEntry(void *argument)
         }
     }
   /* USER CODE END SensorHandleEntry */
+}
+
+/* USER CODE BEGIN Header_InfCalOpticalEntry */
+/**
+* @brief Function implementing the InfCalOpticalTa thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_InfCalOpticalEntry */
+void InfCalOpticalEntry(void *argument)
+{
+  /* USER CODE BEGIN InfCalOpticalEntry */
+  /* Infinite loop */
+  for(;;)
+  {
+        /// TODO:监测红外传感器数据，对光流数据进行校准
+  }
+  /* USER CODE END InfCalOpticalEntry */
 }
 
 /* KeyTimerCallback function */
