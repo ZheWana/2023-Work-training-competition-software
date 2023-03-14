@@ -35,12 +35,6 @@
     y = ty;                                     \
 }while(0)
 
-#define AngRotate2zero(rad, theta) do{ \
-    float tempRad = rad - theta;\
-    rad = (tempRad)<-M_PI?tempRad + 2 * M_PI: \
-          (tempRad)>M_PI?tempRad - 2 * M_PI:(tempRad); \
-}while(0)
-
 #ifndef M_PI
 #define M_PI 3.1415926535897932384626433832795
 #endif
@@ -68,10 +62,21 @@ typedef struct CarControlBlock {
     bool SerialOutputEnable: 1;
 
     // 边界传感器数据
-    uint32_t infrared;
+    enum {
+        inFront,// 0 -7 :front（inverse）
+        inLeft,// 8 -15:left(inverse)
+        inBack,// 16-23:back
+        inRight,// 24-31:right
+    };
+    union boundData {
+        uint32_t rawData;
+        uint8_t data[4];
+    } inf;
+
 
     // 整车姿态相关数据
-    hmcData_t hmc;
+    hmcData_t
+            hmc;
     icmData_t icm;
     float yaw;// 弧度制
     float initYawOffset;
