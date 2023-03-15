@@ -95,7 +95,7 @@ osThreadId_t SensorHandleHandle;
 const osThreadAttr_t SensorHandle_attributes = {
   .name = "SensorHandle",
   .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityLow,
+  .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for InfCalOpticalTa */
 osThreadId_t InfCalOpticalTaHandle;
@@ -415,7 +415,7 @@ void InfCalOpticalEntry(void *argument)
   /* Infinite loop */
   for(;;)
   {
-        /// TODO:监测红外传感器数据，对光流数据进行校准
+        /// TODO:监测红外传感器数据，对光流数据进行校�?
   }
   /* USER CODE END InfCalOpticalEntry */
 }
