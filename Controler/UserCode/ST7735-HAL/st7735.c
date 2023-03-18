@@ -152,7 +152,6 @@ static void ST7735_WriteCommand(uint8_t cmd) {
     TFT_DC_C();
 #ifdef USE_SPI_DMA
     HAL_SPI_Transmit_DMA(&ST7735_SPI_PORT, &cmd, sizeof(cmd));
-    //while(hspi1.State == HAL_SPI_STATE_BUSY_TX);
 #else
     HAL_SPI_Transmit(&ST7735_SPI_PORT, &cmd, sizeof(cmd), HAL_MAX_DELAY);
 #endif
@@ -162,7 +161,6 @@ static void ST7735_WriteData(uint8_t *buff, size_t buff_size) {
     TFT_DC_D();
 #ifdef USE_SPI_DMA
     HAL_SPI_Transmit_DMA(&ST7735_SPI_PORT, buff, buff_size);
-    while(hspi1.State == HAL_SPI_STATE_BUSY_TX);
 #else
     HAL_SPI_Transmit(&ST7735_SPI_PORT, buff, buff_size, HAL_MAX_DELAY);
 #endif
