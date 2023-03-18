@@ -65,14 +65,15 @@ typedef struct CarControlBlock {
     union boundData {
         uint32_t rawData;
         uint8_t data[4];
-    } inf;// 原始数据
+    } infr;// 原始数据
+    uint8_t infrDataPre[4];
     struct infrareDir {
-        uint8_t inFront: 2;// 0 -7 :front（inverse�?
+        uint8_t inFront: 2;// 0 -7 :front(inverse)
         uint8_t inLeft: 2;// 8 -15:left(inverse)
         uint8_t inBack: 2;// 16-23:back
         uint8_t inRight: 2;// 24-31:right
         uint8_t lastFront;
-    } infrareDir;// 方向数据
+    } infrDir;// 方向数据
     uint8_t infrRecord[4];// 各个红外输出历史记录
 
 
@@ -127,6 +128,12 @@ extern CCB_Typedef CarInfo;
 extern Shell shell;
 
 #define LCD_EOP 0,NULL,Font_7x10,0,0
+
+// Infrared variable rename
+#define InfrDir CarInfo.infrDir
+#define InfrData CarInfo.infr.data
+#define InfrRecord CarInfo.infrRecord
+#define InfrDataPre CarInfo.infrDataPre
 
 void LCD_StringLayout(uint16_t maxY, char *buff, FontDef font, uint16_t color, uint16_t bgcolor);
 
