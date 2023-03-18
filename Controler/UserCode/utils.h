@@ -65,12 +65,19 @@ typedef struct CarControlBlock {
     union boundData {
         uint32_t rawData;
         uint8_t data[4];
-    } inf;
+    } inf;// 原始数据
+    struct infrareDir {
+        uint8_t inFront: 2;// 0 -7 :front（inverse�?
+        uint8_t inLeft: 2;// 8 -15:left(inverse)
+        uint8_t inBack: 2;// 16-23:back
+        uint8_t inRight: 2;// 24-31:right
+        uint8_t lastFront;
+    } infrareDir;// 方向数据
+    uint8_t infrRecord[4];// 各个红外输出历史记录
 
 
     // 整车姿态相关数据
-    hmcData_t
-            hmc;
+    hmcData_t hmc;
     icmData_t icm;
     float yaw;// 弧度制
     float initYawOffset;
@@ -116,13 +123,6 @@ typedef struct CarControlBlock {
     void (*RunDropState)(void);
 } CCB_Typedef;
 
-enum {
-    inFront,// 0 -7 :front（inverse）
-    inLeft,// 8 -15:left(inverse)
-    inBack,// 16-23:back
-    inRight,// 24-31:right
-};
-
 extern CCB_Typedef CarInfo;
 extern Shell shell;
 
@@ -130,8 +130,7 @@ extern Shell shell;
 
 void LCD_StringLayout(uint16_t maxY, char *buff, FontDef font, uint16_t color, uint16_t bgcolor);
 
-void Speed2MotorConverter(float vx, float vy,
-                          float *m1Speed, float *m2Speed, float *m3Speed, float *m4Speed);
+int GetFrontFromYaw(float yawInRad);
 
 void SupportRotation(float position, uint32_t time);
 

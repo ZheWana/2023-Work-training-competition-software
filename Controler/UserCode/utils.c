@@ -111,6 +111,7 @@ void __RunDropState(void) {
 }
 
 CCB_Typedef CarInfo = {
+        .infrareDir = {0, 1, 2, 3},
         .mPsiCtr = 0,
         .cPsiCtr = 1,
         .spdLimit = {20, 20, 20, 20},
@@ -155,6 +156,13 @@ void LCD_StringLayout(uint16_t maxY, char *buff, FontDef font, uint16_t color, u
         if (fullScreenFlag == 0)
             ST7735_DrawString(0, maxY - add, "Full Content   ", font, color, bgcolor);
     }
+}
+
+int GetFrontFromYaw(float yawInRad) {
+    if (yawInRad > -M_PI / 4 && yawInRad <= M_PI / 4)return 0;
+    else if (yawInRad <= -M_PI / 4 && yawInRad > -M_PI * 3.0f / 4)return 3;
+    else if (yawInRad <= -M_PI * 3.0f / 4 && yawInRad > M_PI * 3.0f / 4)return 2;
+    else return 1;
 }
 
 /**
