@@ -51,18 +51,30 @@ uint8_t set(int argc, char *argv[]) {
             } else if (!strcasecmp("cay", argv[i])) {
                 CarInfo.cpPidY.ctr.aim = (float) atof(argv[i + 1]);
                 printf("cpPidY.aim is set to %f\r\n", (float) atof(argv[i + 1]));
-            } else if (!strcasecmp("ap", argv[i])) {
+            } else if (!strcasecmp("avp", argv[i])) {
                 CarInfo.avPid.kp = (float) atof(argv[i + 1]);
-                printf("cpPidY.kp is set to %f\r\n", (float) atof(argv[i + 1]));
-            } else if (!strcasecmp("ai", argv[i])) {
+                printf("avPid.kp is set to %f\r\n", (float) atof(argv[i + 1]));
+            } else if (!strcasecmp("avi", argv[i])) {
                 CarInfo.avPid.ki = (float) atof(argv[i + 1]);
-                printf("cpPidY.ki is set to %f\r\n", (float) atof(argv[i + 1]));
-            } else if (!strcasecmp("ad", argv[i])) {
+                printf("avPid.ki is set to %f\r\n", (float) atof(argv[i + 1]));
+            } else if (!strcasecmp("avd", argv[i])) {
                 CarInfo.avPid.kd = (float) atof(argv[i + 1]);
-                printf("cpPidY.kd is set to %f\r\n", (float) atof(argv[i + 1]));
-            } else if (!strcasecmp("aa", argv[i])) {
+                printf("avPid.kd is set to %f\r\n", (float) atof(argv[i + 1]));
+            } else if (!strcasecmp("ava", argv[i])) {
                 CarInfo.avPid.ctr.aim = (float) atof(argv[i + 1]);
-                printf("cpPidY.aim is set to %f\r\n", (float) atof(argv[i + 1]));
+                printf("avPid.aim is set to %f\r\n", (float) atof(argv[i + 1]));
+            } else if (!strcasecmp("ap", argv[i])) {
+                CarInfo.aPid.kp = (float) atof(argv[i + 1]);
+                printf("aPid.kp is set to %f\r\n", (float) atof(argv[i + 1]));
+            } else if (!strcasecmp("ai", argv[i])) {
+                CarInfo.aPid.ki = (float) atof(argv[i + 1]);
+                printf("aPid.ki is set to %f\r\n", (float) atof(argv[i + 1]));
+            } else if (!strcasecmp("ad", argv[i])) {
+                CarInfo.aPid.kd = (float) atof(argv[i + 1]);
+                printf("aPid.kd is set to %f\r\n", (float) atof(argv[i + 1]));
+            } else if (!strcasecmp("aa", argv[i])) {
+                CarInfo.aPid.ctr.aim = (float) atof(argv[i + 1]);
+                printf("aPid.aim is set to %f\r\n", (float) atof(argv[i + 1]));
             }
         }
     }

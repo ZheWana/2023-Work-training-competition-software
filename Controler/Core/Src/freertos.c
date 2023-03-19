@@ -218,8 +218,9 @@ void MX_FREERTOS_Init(void) {
   * @retval None
   */
 /* USER CODE END Header_IOcontrolEntry */
-void IOcontrolEntry(void *argument) {
+_Noreturn void IOcontrolEntry(void *argument) {
     /* USER CODE BEGIN IOcontrolEntry */
+    UNUSED(argument);
     /* Infinite loop */
     for (;;) {
         HAL_GPIO_WritePin(LED_System_GPIO_Port, LED_System_Pin, 1);
@@ -238,8 +239,9 @@ void IOcontrolEntry(void *argument) {
 * @retval None
 */
 /* USER CODE END Header_SerialOutputEntry */
-void SerialOutputEntry(void *argument) {
+_Noreturn void SerialOutputEntry(void *argument) {
     /* USER CODE BEGIN SerialOutputEntry */
+    UNUSED(argument);
     /* Infinite loop */
     for (;;) {
         if (!CarInfo.SerialOutputEnable)osThreadSuspend(SerialOutputHandle);
@@ -297,8 +299,9 @@ void SerialOutputEntry(void *argument) {
 * @retval None
 */
 /* USER CODE END Header_StateMachineEntry */
-void StateMachineEntry(void *argument) {
+_Noreturn void StateMachineEntry(void *argument) {
     /* USER CODE BEGIN StateMachineEntry */
+    UNUSED(argument);
     /* Infinite loop */
     for (;;) {
 //        CarInfo.RunMainState();
@@ -313,8 +316,9 @@ void StateMachineEntry(void *argument) {
 * @retval None
 */
 /* USER CODE END Header_ScreenRefreshEntry */
-void ScreenRefreshEntry(void *argument) {
+_Noreturn void ScreenRefreshEntry(void *argument) {
     /* USER CODE BEGIN ScreenRefreshEntry */
+    UNUSED(argument);
     /* Infinite loop */
     for (;;) {
         char buff[64];
@@ -366,8 +370,9 @@ void ScreenRefreshEntry(void *argument) {
 * @retval None
 */
 /* USER CODE END Header_SensorHandleEntry */
-void SensorHandleEntry(void *argument) {
+_Noreturn void SensorHandleEntry(void *argument) {
     /* USER CODE BEGIN SensorHandleEntry */
+    UNUSED(argument);
     /* Infinite loop */
     for (;;) {
         static enum SensorType {
@@ -399,21 +404,27 @@ void SensorHandleEntry(void *argument) {
             }
                 break;
             case sCompass:
+                taskENTER_CRITICAL();
                 QMC5883_GetData(&CarInfo.hmc);
                 VecRotate(CarInfo.hmc.Mx, CarInfo.hmc.My, CarInfo.initYawOffset);
                 CarInfo.yaw = Filter_MovingAvgf(&yawFilter, atan2f(CarInfo.hmc.Mx, CarInfo.hmc.My));
+                taskEXIT_CRITICAL();
                 break;
             case sGyro:
+                taskENTER_CRITICAL();
                 ICM42605_GetData(&CarInfo.icm, ICM_MODE_ACC | ICM_MODE_GYRO);
                 CarInfo.icm.gz = Filter_MovingAvgf(&gyroFilter, CarInfo.icm.gz) + 0.08f;
+                taskEXIT_CRITICAL();
                 break;
             case sOptical:
+                taskENTER_CRITICAL();
                 PMW3901_Read_Data(&CarInfo.pmw);
                 CarInfo.dx = (float) -CarInfo.pmw.deltaX;
                 CarInfo.dy = (float) -CarInfo.pmw.deltaY;
                 VecRotate(CarInfo.dx, CarInfo.dy, CarInfo.yaw);
                 CarInfo.curX += CarInfo.dx;
                 CarInfo.curY += CarInfo.dy;
+                taskEXIT_CRITICAL();
                 break;
             default:
                 break;
@@ -429,8 +440,9 @@ void SensorHandleEntry(void *argument) {
 * @retval None
 */
 /* USER CODE END Header_InfCalOpticalEntry */
-void InfCalOpticalEntry(void *argument) {
+_Noreturn void InfCalOpticalEntry(void *argument) {
     /* USER CODE BEGIN InfCalOpticalEntry */
+    UNUSED(argument);
     /* Infinite loop */
     for (;;) {
         /// TODO:监测红外传感器数据，对光流数据进行校�?
