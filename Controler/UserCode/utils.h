@@ -110,7 +110,7 @@ typedef struct CarControlBlock {
     // PID姿态控制
     Pid_t avPid;// 角速度闭环
     Pid_t aPid;// 角度闭环
-    float avPidOut;
+    float aPidOut;
     const int aPidPeriod;
     enum aPidLock {
         aPidLocked, aPidUnlocked

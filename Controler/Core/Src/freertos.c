@@ -33,6 +33,7 @@
 #include "LobotSerialServo/LobotSerialServo.h"
 #include "Filter/filter.h"
 #include "freertos_os2.h"
+#include "move.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -238,7 +239,7 @@ _Noreturn void SerialOutputEntry(void *argument) {
         if (!CarInfo.SerialOutputEnable)osThreadSuspend(SerialOutputHandle);
 
         for (int i = 0; i < 8; i++) {
-            printf("%c", CarInfo.inf.rawData & (1 << i) ? '1' : '0');
+            printf("%c", CarInfo.infr.rawData & (1 << i) ? '1' : '0');
         }
         printf("\r\n");
 
@@ -320,13 +321,13 @@ _Noreturn void ScreenRefreshEntry(void *argument) {
         LCD_StringLayout(128, buff, Font_7x10, ST7735_BLACK, ST7735_WHITE);
 
         for (int i = 0; i < 16; i++) {
-            buff[i] = CarInfo.inf.rawData & (1 << i) ? '1' : '0';
+            buff[i] = CarInfo.infr.rawData & (1 << i) ? '1' : '0';
         }
         buff[16] = '\0';
         LCD_StringLayout(128, buff, Font_7x10, ST7735_BLACK, ST7735_WHITE);
 
         for (int i = 0; i < 16; i++) {
-            buff[i] = CarInfo.inf.rawData & (1 << (i + 16)) ? '1' : '0';
+            buff[i] = CarInfo.infr.rawData & (1 << (i + 16)) ? '1' : '0';
         }
         buff[16] = '\0';
         LCD_StringLayout(128, buff, Font_7x10, ST7735_BLACK, ST7735_WHITE);
@@ -379,19 +380,19 @@ _Noreturn void SensorHandleEntry(void *argument) {
 
         switch (SensorType) {
             case sInfrared: {
-                HC165_Get_Data(&CarInfo.inf.rawData);
+                HC165_Get_Data(&CarInfo.infr.rawData);
 
                 // Byte inversion
                 uint8_t a = 0, b = 0;
                 for (int i = 0; i < 8; i++) {
-                    a |= CarInfo.inf.data[CarInfo.infrareDir.inFront] & (1 << i) ? 1 << (7 - i) : 0;
-                    b |= CarInfo.inf.data[CarInfo.infrareDir.inLeft] & (1 << i) ? 1 << (7 - i) : 0;
+                    a |= CarInfo.infr.data[InfrDir.inFront] & (1 << i) ? 1 << (7 - i) : 0;
+                    b |= CarInfo.infr.data[InfrDir.inLeft] & (1 << i) ? 1 << (7 - i) : 0;
                 }
-                CarInfo.inf.data[CarInfo.infrareDir.inFront] = a;
-                CarInfo.inf.data[CarInfo.infrareDir.inLeft] = b;
+                CarInfo.infr.data[InfrDir.inFront] = a;
+                CarInfo.infr.data[InfrDir.inLeft] = b;
 
                 // 反转黑白
-//                CarInfo.inf.rawData = ~CarInfo.inf.rawData;
+//                CarInfo.infr.rawData = ~CarInfo.infr.rawData;
             }
                 break;
             case sCompass:
@@ -441,50 +442,50 @@ _Noreturn void InfCalOpticalEntry(void *argument) {
         const uint8_t right = 0x0f, left = 0xf0, front = 0x0f, back = 0xf0;
 
         // 旋转红外传感器离散坐标系
-        CarInfo.infrareDir.lastFront = CarInfo.infrareDir.inFront;
-        CarInfo.infrareDir.inFront = GetFrontFromYaw(CarInfo.yaw);
-        if (CarInfo.infrareDir.lastFront != CarInfo.infrareDir.inFront) {
+        InfrDir.lastFront = InfrDir.inFront;
+        InfrDir.inFront = GetFrontFromYaw(CarInfo.yaw);
+        if (InfrDir.lastFront != InfrDir.inFront) {
             memset(CarInfo.infrRecord, 0, 4);
-            CarInfo.infrareDir.inLeft = CarInfo.infrareDir.inFront + 1;
-            CarInfo.infrareDir.inBack = CarInfo.infrareDir.inLeft + 1;
-            CarInfo.infrareDir.inRight = CarInfo.infrareDir.inBack + 1;
+            InfrDir.inLeft = InfrDir.inFront + 1;
+            InfrDir.inBack = InfrDir.inLeft + 1;
+            InfrDir.inRight = InfrDir.inBack + 1;
         } else {
             for (int i = 0; i < 4; i++) {
                 // Record infrare history
-                CarInfo.infrRecord[i] |= CarInfo.inf.data[i];
+                CarInfo.infrRecord[i] |= CarInfo.infr.data[i];
                 if (CarInfo.infrRecord[i] != 0)// fill zero if data is lost
                     u8ZeroFiller(&CarInfo.infrRecord[i]);
 
                 // Clear parallel direction record
                 if (CarInfo.infrRecord[i] == 0xff)CarInfo.infrRecord[i] = 0;
                 // Zero Clear
-                if (CarInfo.inf.data[i] == 0 && IsCarStatic)CarInfo.infrRecord[i] = 0;
+                if (CarInfo.infr.data[i] == 0 && IsCarStatic)CarInfo.infrRecord[i] = 0;
             }
 
             // Judge record type
-            switch (CarInfo.infrRecord[CarInfo.infrareDir.inFront] & CarInfo.infrRecord[CarInfo.infrareDir.inBack]) {
+            switch (CarInfo.infrRecord[InfrDir.inFront] & CarInfo.infrRecord[InfrDir.inBack]) {
                 case right:
                     CarInfo.curX = (++cntX) * MOVE_X_Grid;
-                    CarInfo.infrRecord[CarInfo.infrareDir.inFront] = CarInfo.infrRecord[CarInfo.infrareDir.inBack] = 0;
+                    CarInfo.infrRecord[InfrDir.inFront] = CarInfo.infrRecord[InfrDir.inBack] = 0;
                     printf("right datect\r\n");
                     break;
                 case left:
                     CarInfo.curX = (--cntX) * MOVE_X_Grid;
-                    CarInfo.infrRecord[CarInfo.infrareDir.inFront] = CarInfo.infrRecord[CarInfo.infrareDir.inBack] = 0;
+                    CarInfo.infrRecord[InfrDir.inFront] = CarInfo.infrRecord[InfrDir.inBack] = 0;
                     printf("left datect\r\n");
                     break;
                 default:// do nothing
                     break;
             }
-            switch (CarInfo.infrRecord[CarInfo.infrareDir.inRight] & CarInfo.infrRecord[CarInfo.infrareDir.inLeft]) {
+            switch (CarInfo.infrRecord[InfrDir.inRight] & CarInfo.infrRecord[InfrDir.inLeft]) {
                 case front:
                     CarInfo.curY = (++cntY) * MOVE_Y_Grid;
-                    CarInfo.infrRecord[CarInfo.infrareDir.inRight] = CarInfo.infrRecord[CarInfo.infrareDir.inLeft] = 0;
+                    CarInfo.infrRecord[InfrDir.inRight] = CarInfo.infrRecord[InfrDir.inLeft] = 0;
                     printf("front datect\r\n");
                     break;
                 case back:
                     CarInfo.curY = ((--cntY < 0) ? 0 : cntY) * MOVE_Y_Grid;
-                    CarInfo.infrRecord[CarInfo.infrareDir.inRight] = CarInfo.infrRecord[CarInfo.infrareDir.inLeft] = 0;
+                    CarInfo.infrRecord[InfrDir.inRight] = CarInfo.infrRecord[InfrDir.inLeft] = 0;
                     printf("back datect\r\n");
                     break;
                 default:// do nothing
