@@ -467,26 +467,26 @@ _Noreturn void InfCalOpticalEntry(void *argument) {
                 case right:
                     CarInfo.curX = (++cntX) * MOVE_X_Grid;
                     CarInfo.infrRecord[InfrDir.inFront] = CarInfo.infrRecord[InfrDir.inBack] = 0;
-                    printf("right datect\r\n");
+                    printf("right detect\r\n");
                     break;
                 case left:
                     CarInfo.curX = (--cntX) * MOVE_X_Grid;
                     CarInfo.infrRecord[InfrDir.inFront] = CarInfo.infrRecord[InfrDir.inBack] = 0;
-                    printf("left datect\r\n");
+                    printf("left detect\r\n");
                     break;
                 default:// do nothing
                     break;
             }
             switch (CarInfo.infrRecord[InfrDir.inRight] & CarInfo.infrRecord[InfrDir.inLeft]) {
                 case front:
-                    CarInfo.curY = (++cntY) * MOVE_Y_Grid;
+                    CarInfo.curY = (float) (++cntY) * MOVE_Y_Grid;
                     CarInfo.infrRecord[InfrDir.inRight] = CarInfo.infrRecord[InfrDir.inLeft] = 0;
-                    printf("front datect\r\n");
+                    printf("front detect\r\n");
                     break;
                 case back:
-                    CarInfo.curY = ((--cntY < 0) ? 0 : cntY) * MOVE_Y_Grid;
+                    CarInfo.curY = (float) ((--cntY < 0) ? 0 : cntY) * MOVE_Y_Grid;
                     CarInfo.infrRecord[InfrDir.inRight] = CarInfo.infrRecord[InfrDir.inLeft] = 0;
-                    printf("back datect\r\n");
+                    printf("back detect\r\n");
                     break;
                 default:// do nothing
                     break;
