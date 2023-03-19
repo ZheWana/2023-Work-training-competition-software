@@ -111,7 +111,7 @@ void __RunDropState(void) {
 }
 
 CCB_Typedef CarInfo = {
-        .infrareDir = {0, 1, 2, 3},
+        .infrDir = {0, 1, 2, 3},
         .mPsiCtr = 0,
         .cPsiCtr = 1,
         .spdLimit = {20, 20, 20, 20},
