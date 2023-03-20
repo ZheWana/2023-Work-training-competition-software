@@ -75,6 +75,9 @@ uint8_t set(int argc, char *argv[]) {
             } else if (!strcasecmp("aa", argv[i])) {
                 CarInfo.aPid.ctr.aim = (float) atof(argv[i + 1]);
                 printf("aPid.aim is set to %f\r\n", (float) atof(argv[i + 1]));
+            } else if (!strcasecmp("gc", argv[i])) {
+                CarInfo.gyroConfi = (float) atof(argv[i + 1]);
+                printf("GyroConfidence is set to %f\r\n", (float) atof(argv[i + 1]));
             }
         }
     }
