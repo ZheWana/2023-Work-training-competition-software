@@ -16,8 +16,8 @@
 #include "LetterShell/shell.h"
 #include "ST7735-HAL/fonts.h"
 
-#define ToDig(rad) (rad * 57.295779513082320876798154814105)
-#define ToRad(dig) (dig * 0.01745329251994329576923690768489)
+#define ToDig(rad) (rad * 57.295779513082320876798154814105f)
+#define ToRad(dig) (dig * 0.01745329251994329576923690768489f)
 
 #define PMW_Grid 1280
 
@@ -81,6 +81,7 @@ typedef struct CarControlBlock {
     hmcData_t hmc;
     icmData_t icm;
     float yaw;// 弧度制
+    float gyroConfi;
     float initYawOffset;
     float initGxOffset;
     float initGyOffset;
@@ -137,7 +138,7 @@ extern Shell shell;
 
 void LCD_StringLayout(uint16_t maxY, char *buff, FontDef font, uint16_t color, uint16_t bgcolor);
 
-int GetFrontFromYaw(float yawInRad);
+uint8_t IsVerticalFliped(void);
 
 void SupportRotation(float position, uint32_t time);
 

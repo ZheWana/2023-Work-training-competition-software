@@ -9,11 +9,13 @@
 
 #define Filter_Window (100)
 
-typedef struct FilterBuffer {
+typedef struct MovingFilterTypedef {
     float buff[Filter_Window];
     int index;
-} FilterTypedef_t;
+} MovingFilter_t;
 
-float Filter_MovingAvgf(FilterTypedef_t *fHandle, float input);
+float Filter_MovingAvgf(MovingFilter_t *fHandle, float input);
+
+float Filter_Smoothing(float curData, float *preData, float threshold);
 
 #endif //FILTER_H

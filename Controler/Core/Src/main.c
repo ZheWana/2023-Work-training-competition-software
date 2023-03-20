@@ -69,7 +69,7 @@ extern osMessageQueueId_t SensorMessageQueueHandle;
 spChanger_t paraKp, paraKi, paraKd;
 fusion_t icmFusion;
 
-char shBuff[128];
+char shBuff[256];
 char chBuff;
 
 int motor = 0;
@@ -220,7 +220,7 @@ int main(void)
     KeyInit();
 
     shell.write = uart_charPut;
-    shellInit(&shell, shBuff, 128);
+    shellInit(&shell, shBuff, 256);
 
     // Interrupt
     HAL_TIM_Base_Start_IT(&htim6);
