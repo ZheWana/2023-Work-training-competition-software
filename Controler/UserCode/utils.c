@@ -111,6 +111,7 @@ void __RunDropState(void) {
 }
 
 CCB_Typedef CarInfo = {
+        .gyroConfi = 0.8f,
         .infrDir = {0, 1, 2, 3},
         .mPsiCtr = 0,
         .cPsiCtr = 1,
@@ -158,11 +159,13 @@ void LCD_StringLayout(uint16_t maxY, char *buff, FontDef font, uint16_t color, u
     }
 }
 
-int GetFrontFromYaw(float yawInRad) {
-    if (yawInRad > -M_PI / 4 && yawInRad <= M_PI / 4)return 0;
-    else if (yawInRad <= -M_PI / 4 && yawInRad > -M_PI * 3.0f / 4)return 3;
-    else if (yawInRad <= -M_PI * 3.0f / 4 && yawInRad > M_PI * 3.0f / 4)return 2;
+uint8_t IsVerticalFliped(void) {
+    // 返回值传递信息，表示横竖线是否是反的：0正，1反
+    if ((CarInfo.yaw > -M_PI / 4 && CarInfo.yaw <= M_PI / 4)
+        || (CarInfo.yaw <= -M_PI * 3.0f / 4 && CarInfo.yaw > M_PI * 3.0f / 4))
+        return 0;
     else return 1;
+
 }
 
 /**
@@ -188,11 +191,44 @@ void ClipRotition(float position, uint32_t time) {
 
 extern char chBuff;
 
+// GPIO中断，用于与树莓派通信，上升沿表示检测到校准线
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+    static uint8_t cntX = 0, cntY = 0;
+    switch (GPIO_Pin) {
+        case GPIO_PIN_3:// 横线触发信号
+            if (IsVerticalFliped())goto Vertical;
+        Horizontal:// 横线对应Y变化
+            if (CarInfo.cpPidY.ctr.aim > CarInfo.curY)
+                ++cntY;
+            else
+                --cntY;
+
+            break;
+        case GPIO_PIN_5:// 竖线触发信号
+            if (IsVerticalFliped())goto Horizontal;
+        Vertical:// 竖线对应X变化
+            if (CarInfo.cpPidX.ctr.aim > CarInfo.curX)
+                ++cntX;
+            else
+                --cntX;
+
+            break;
+        default:
+            break;
+    }
+    printf("X:%d,%d\r\n", cntX, cntY);
+}
+
+
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
-    if (huart->Instance == UART5) {
+    if (huart->Instance == UART5) {// shell用串口
         SPC_GetChar(chBuff);
         shellHandler(&shell, chBuff);
         HAL_UART_Receive_IT(huart, (uint8_t *) &chBuff, 1);
+    }
+    if (huart->Instance == UART4) {// 树莓派串口
+        // 数据待处理
+        // 接收函数没写
     }
 }
 
