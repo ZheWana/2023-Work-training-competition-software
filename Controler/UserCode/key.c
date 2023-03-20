@@ -46,8 +46,8 @@ void ComKey_MultipleClickCallback(comkey_t *key) {
             }
             PID_Init(&CarInfo.cpPidX, 0.1f, 0, 0);
             PID_Init(&CarInfo.cpPidY, 0.1f, 0, 0);
-            PID_Init(&CarInfo.avPid, 0.1f, 0.015f, 0);
-            PID_Init(&CarInfo.aPid, 30, 0, 0);
+            PID_Init(&CarInfo.avPid, 0.2f, 0.005f, 0);
+            PID_Init(&CarInfo.aPid, 150, 0, 0);
         } else {
             record = 0;
             for (int i = 0; i < 4; i++) {
