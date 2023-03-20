@@ -359,7 +359,7 @@ _Noreturn void ScreenRefreshEntry(void *argument) {
 * @retval None
 */
 /* USER CODE END Header_SensorHandleEntry */
-_Noreturn void SensorHandleEntry(void *argument) {
+void SensorHandleEntry(void *argument) {
     /* USER CODE BEGIN SensorHandleEntry */
     UNUSED(argument);
     /* Infinite loop */
@@ -370,8 +370,8 @@ _Noreturn void SensorHandleEntry(void *argument) {
             sGyro,
             sOptical,
         } SensorType;
-        static FilterTypedef_t gyroFilter = {0};
-        static FilterTypedef_t yawFilter = {0};
+        static MovingFilter_t gyroFilter = {0};
+        static float yawPre = 0;
 
         osMessageQueueGet(SensorMessageQueueHandle, &SensorType, 0, osWaitForever);
 
@@ -396,7 +396,10 @@ _Noreturn void SensorHandleEntry(void *argument) {
                 taskENTER_CRITICAL();
                 QMC5883_GetData(&CarInfo.hmc);
                 VecRotate(CarInfo.hmc.Mx, CarInfo.hmc.My, CarInfo.initYawOffset);
-                CarInfo.yaw = Filter_MovingAvgf(&yawFilter, atan2f(CarInfo.hmc.Mx, CarInfo.hmc.My));
+                CarInfo.yaw = Filter_Smoothing(
+                        CarInfo.gyroConfi * (CarInfo.yaw + ToRad(CarInfo.icm.gz) * 0.001f)
+                        + (1 - CarInfo.gyroConfi) * atan2f(CarInfo.hmc.Mx, CarInfo.hmc.My), &yawPre, 0.5f);
+//                CarInfo.yaw = Filter_MovingAvgf(&yawFilter, atan2f(CarInfo.hmc.Mx, CarInfo.hmc.My));
                 taskEXIT_CRITICAL();
                 break;
             case sGyro:
@@ -429,66 +432,11 @@ _Noreturn void SensorHandleEntry(void *argument) {
 * @retval None
 */
 /* USER CODE END Header_InfCalOpticalEntry */
-_Noreturn void InfCalOpticalEntry(void *argument) {
+void InfCalOpticalEntry(void *argument) {
     /* USER CODE BEGIN InfCalOpticalEntry */
     UNUSED(argument);
     /* Infinite loop */
     for (;;) {
-        /// TODO:监测红外传感器数据，对光流数据进行校�?
-        static int cntX = 0, cntY = 0;// X、Y轴格子计数；
-        const uint8_t right = 0x0f, left = 0xf0, front = 0x0f, back = 0xf0;
-
-        // 旋转红外传感器离散坐标系
-        InfrDir.lastFront = InfrDir.inFront;
-        InfrDir.inFront = GetFrontFromYaw(CarInfo.yaw);
-        if (InfrDir.lastFront != InfrDir.inFront) {
-            memset(CarInfo.infrRecord, 0, 4);
-            InfrDir.inLeft = InfrDir.inFront + 1;
-            InfrDir.inBack = InfrDir.inLeft + 1;
-            InfrDir.inRight = InfrDir.inBack + 1;
-        } else {
-            for (int i = 0; i < 4; i++) {
-                // Record infrare history
-                CarInfo.infrRecord[i] |= CarInfo.infr.data[i];
-                if (CarInfo.infrRecord[i] != 0)// fill zero if data is lost
-                    u8ZeroFiller(&CarInfo.infrRecord[i]);
-
-                // Clear parallel direction record
-                if (CarInfo.infrRecord[i] == 0xff)CarInfo.infrRecord[i] = 0;
-                // Zero Clear
-                if (CarInfo.infr.data[i] == 0 && IsCarStatic)CarInfo.infrRecord[i] = 0;
-            }
-
-            // Judge record type
-            switch (CarInfo.infrRecord[InfrDir.inFront] & CarInfo.infrRecord[InfrDir.inBack]) {
-                case right:
-                    CarInfo.curX = (++cntX) * MOVE_X_Grid;
-                    CarInfo.infrRecord[InfrDir.inFront] = CarInfo.infrRecord[InfrDir.inBack] = 0;
-                    printf("right detect\r\n");
-                    break;
-                case left:
-                    CarInfo.curX = (--cntX) * MOVE_X_Grid;
-                    CarInfo.infrRecord[InfrDir.inFront] = CarInfo.infrRecord[InfrDir.inBack] = 0;
-                    printf("left detect\r\n");
-                    break;
-                default:// do nothing
-                    break;
-            }
-            switch (CarInfo.infrRecord[InfrDir.inRight] & CarInfo.infrRecord[InfrDir.inLeft]) {
-                case front:
-                    CarInfo.curY = (float) (++cntY) * MOVE_Y_Grid;
-                    CarInfo.infrRecord[InfrDir.inRight] = CarInfo.infrRecord[InfrDir.inLeft] = 0;
-                    printf("front detect\r\n");
-                    break;
-                case back:
-                    CarInfo.curY = (float) ((--cntY < 0) ? 0 : cntY) * MOVE_Y_Grid;
-                    CarInfo.infrRecord[InfrDir.inRight] = CarInfo.infrRecord[InfrDir.inLeft] = 0;
-                    printf("back detect\r\n");
-                    break;
-                default:// do nothing
-                    break;
-            }
-        }
 
     }
     /* USER CODE END InfCalOpticalEntry */
