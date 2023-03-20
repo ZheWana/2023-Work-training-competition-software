@@ -238,12 +238,7 @@ _Noreturn void SerialOutputEntry(void *argument) {
     for (;;) {
         if (!CarInfo.SerialOutputEnable)osThreadSuspend(SerialOutputHandle);
 
-        for (int i = 0; i < 8; i++) {
-            printf("%c", CarInfo.infr.rawData & (1 << i) ? '1' : '0');
-        }
-        printf("\r\n");
-
-//        printf("data:");
+        printf("data:");
 //
 //        printf("%d,", CarInfo.spd[0]);
 //        printf("%d,", CarInfo.spd[1]);
@@ -253,7 +248,8 @@ _Noreturn void SerialOutputEntry(void *argument) {
 //        printf("%f,", CarInfo.psi[0]);
 //        printf("%f,", CarInfo.mpPid[0].ctr.aim);
 //
-//        printf("%f,", CarInfo.yaw);
+        printf("%f,", CarInfo.yaw);
+        printf("%f,", atan2f(CarInfo.hmc.Mx, CarInfo.hmc.My));
 //        printf("%f,", CarInfo.avPid.ctr.aim);
 
 //        printf("%f,", CarInfo.curX);
@@ -266,11 +262,12 @@ _Noreturn void SerialOutputEntry(void *argument) {
 //            printf("%d", CarInfo.inf & (1 << i) ? 1 : 0);
 //        }
 
-//        printf("%.3f,", CarInfo.hmc.Mx);
-//        printf("%.3f,", CarInfo.hmc.My);
+        printf("%.3f,", CarInfo.hmc.Mx);
+        printf("%.3f,", CarInfo.hmc.My);
 //        printf("%.3f,", CarInfo.icm.gx);
 //        printf("%.3f,", CarInfo.icm.gy);
-//        printf("%.3f,", CarInfo.icm.gz);
+        printf("%.3f,", CarInfo.icm.gz);
+        printf("%.3f,", CarInfo.avPid.error.sum);
 
 //        printf("%f,", CarInfo.icm.ax);
 //        printf("%f,", CarInfo.icm.ay);
