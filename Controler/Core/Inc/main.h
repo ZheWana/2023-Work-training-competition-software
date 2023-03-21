@@ -95,10 +95,16 @@ void msgLog(const char *format, ...);
 #define LED_White_GPIO_Port GPIOD
 #define SPI3_CS_Pin GPIO_PIN_15
 #define SPI3_CS_GPIO_Port GPIOA
+#define Pi_Switch_Pin GPIO_PIN_1
+#define Pi_Switch_GPIO_Port GPIOD
+#define Pi_Reset_Pin GPIO_PIN_3
+#define Pi_Reset_GPIO_Port GPIOD
+#define Pi_Ready_Pin GPIO_PIN_5
+#define Pi_Ready_GPIO_Port GPIOD
 #define PMW3901_CS_Pin GPIO_PIN_7
 #define PMW3901_CS_GPIO_Port GPIOD
 /* USER CODE BEGIN Private defines */
-#define Key_PollingPeriod               (1)// soft timer
+#define Key_PollingPeriod               (1)
 #define UC_PollingPeriod                (20)
 #define UC_TimerResetPeriod             (10000)
 #define SupportServoID                  (6)
