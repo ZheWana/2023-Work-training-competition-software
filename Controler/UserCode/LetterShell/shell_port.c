@@ -14,7 +14,8 @@
 
 #include "utils.h"
 
-extern CCB_Typedef CarInfo;
+extern int PIMaxError;
+
 
 short uart_charPut(char *data, unsigned short len) {
     HAL_UART_Transmit(&huart5, (const uint8_t *) data, len, HAL_MAX_DELAY);
@@ -78,6 +79,9 @@ uint8_t set(int argc, char *argv[]) {
             } else if (!strcasecmp("gc", argv[i])) {
                 CarInfo.gyroConfi = (float) atof(argv[i + 1]);
                 printf("GyroConfidence is set to %f\r\n", (float) atof(argv[i + 1]));
+            } else if (!strcasecmp("pme", argv[i])) {
+                PIMaxError = (float) atof(argv[i + 1]);
+                printf("PiMaxError is set to %f\r\n", (float) atof(argv[i + 1]));
             }
         }
     }
