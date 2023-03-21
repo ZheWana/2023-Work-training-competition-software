@@ -103,8 +103,6 @@ static void __RunMainState(void) {
             break;
         case mDrop:// 放下物块
 
-
-
             CarInfo.mainState = mEnd;
             break;
         case mEnd:

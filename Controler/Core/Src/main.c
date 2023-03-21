@@ -380,7 +380,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   /* USER CODE BEGIN Callback 0 */
     if (htim->Instance == TIM6) {
         static enum SensorType {
-            sInfrared,
             sCompass,
             sGyro,
             sOptical,
@@ -391,10 +390,6 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
         // Handle Key Event
         ComKey_Handler();
-
-        // Get Infrared
-        SensorType = sInfrared;
-        osMessageQueuePut(SensorMessageQueueHandle, &SensorType, 0, 0);
 
         // Get compass
         SensorType = sCompass;
@@ -442,9 +437,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
             // Attitude PID
             CarInfo.avPid.ctr.aim = PID_RealizeForAngle(&CarInfo.aPid, CarInfo.yaw);
-            CarInfo.aPidOut = PID_RealizeForAngle(&CarInfo.avPid, CarInfo.icm.gz);
+            CarInfo.avPidOut = PID_RealizeForAngle(&CarInfo.avPid, CarInfo.icm.gz);
             int temp = 50;
-            CarInfo.aPidOut = CarInfo.aPidOut > temp ? temp : CarInfo.aPidOut < -temp ? -temp : CarInfo.aPidOut;
+            CarInfo.avPidOut = CarInfo.avPidOut > temp ? temp : CarInfo.avPidOut < -temp ? -temp : CarInfo.avPidOut;
 
             // Motor PID
             for (int i = 0; i < 4; i++) {
@@ -473,12 +468,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
                     case 1:
                     case 2:
                         CarInfo.msPid[i].ctr.aim =
-                                (CarInfo.mPsiCtr ? CarInfo.mpPIDout[i] : CarInfo.spdAim[i]) + CarInfo.aPidOut;
+                                (CarInfo.mPsiCtr ? CarInfo.mpPIDout[i] : CarInfo.spdAim[i]) + CarInfo.avPidOut;
                         break;
                     case 0:
                     case 3:
                         CarInfo.msPid[i].ctr.aim =
-                                (CarInfo.mPsiCtr ? CarInfo.mpPIDout[i] : CarInfo.spdAim[i]) - CarInfo.aPidOut;
+                                (CarInfo.mPsiCtr ? CarInfo.mpPIDout[i] : CarInfo.spdAim[i]) - CarInfo.avPidOut;
                         break;
                 }
 
