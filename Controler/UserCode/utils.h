@@ -19,7 +19,8 @@
 #define ToDig(rad) (rad * 57.295779513082320876798154814105f)
 #define ToRad(dig) (dig * 0.01745329251994329576923690768489f)
 
-#define PMW_Grid 1280
+#define PMW_X_Grid (0)
+#define PMW_Y_Grid (0)
 
 #define IsCarStatic (!CarInfo.isCarMoving)
 
@@ -60,22 +61,7 @@ typedef struct CarControlBlock {
     float spdX, spdY;
     bool cPsiCtr: 1;
     bool SerialOutputEnable: 1;
-
-    // 边界传感器数据
-    union boundData {
-        uint32_t rawData;
-        uint8_t data[4];
-    } infr;// 原始数据
-    uint8_t infrDataPre[4];
-    struct infrareDir {
-        uint8_t inFront: 2;// 0 -7 :front(inverse)
-        uint8_t inLeft: 2;// 8 -15:left(inverse)
-        uint8_t inBack: 2;// 16-23:back
-        uint8_t inRight: 2;// 24-31:right
-        uint8_t lastFront;
-    } infrDir;// 方向数据
-    uint8_t infrRecord[4];// 各个红外输出历史记录
-
+    bool Pi_Reset: 1;
 
     // 整车姿态相关数据
     hmcData_t hmc;
@@ -86,43 +72,20 @@ typedef struct CarControlBlock {
     float initGxOffset;
     float initGyOffset;
     float initGzOffset;
-    uint8_t isYawInited: 1;
     uint32_t isCarMoving;// 定时器中断中监测整车是否静止，用作步骤规划
-
-    // 存储三色物块抓取和放置顺序
-    uint8_t order[3];
-    enum orderCommand {
-        Red = 0, Blue, Green
-    } orderCommand;
 
     // 状态机状态枚举
     enum mainState {// 主状态机
-        mStart, mScan, mIdentify, mFirstFetch, mFirstDrop, mEnd
+        mStart, mScan, mFetch, mDrop, mEnd
     } mainState;
-
-    enum fetchState {// 抓取从状态机
-        fStart, fFetch1, fFetch2, fFetch3, fEnd
-    } fetchState;
-
-    enum dropState {// 放置从状态机
-        dStart, dDrop1, dDrop2, dDrop3, dEnd
-    } dropState;
 
     // PID姿态控制
     Pid_t avPid;// 角速度闭环
     Pid_t aPid;// 角度闭环
-    float aPidOut;
-    const int aPidPeriod;
-    enum aPidLock {
-        aPidLocked, aPidUnlocked
-    } aPidLock;
+    float avPidOut;
 
     // 状态机相关函数
     void (*RunMainState)(void);
-
-    void (*RunFetchState)(void);
-
-    void (*RunDropState)(void);
 } CCB_Typedef;
 
 extern CCB_Typedef CarInfo;
@@ -130,18 +93,22 @@ extern Shell shell;
 
 #define LCD_EOP 0,NULL,Font_7x10,0,0
 
-// Infrared variable rename
-#define InfrDir CarInfo.infrDir
-#define InfrData CarInfo.infr.data
-#define InfrRecord CarInfo.infrRecord
-#define InfrDataPre CarInfo.infrDataPre
-
 void LCD_StringLayout(uint16_t maxY, char *buff, FontDef font, uint16_t color, uint16_t bgcolor);
-
-uint8_t IsVerticalFliped(void);
 
 void SupportRotation(float position, uint32_t time);
 
 void ClipRotition(float position, uint32_t time);
+
+void MoveTo(float X, float Y);
+
+void TurnTo(float rad);
+
+void Pi_SwitchFromOS(void);
+
+void Pi_SwitchFromHAL(void);
+
+void Pi_ResetFromOS(void);
+
+void Pi_ResetFromHAL(void);
 
 #endif //CONTROLCENTER_UTILS_H
