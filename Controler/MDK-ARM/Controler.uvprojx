@@ -595,11 +595,6 @@
               <FilePath>..\UserCode\utils.c</FilePath>
             </File>
             <File>
-              <FileName>74HC165.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\UserCode\74HC165\74HC165.c</FilePath>
-            </File>
-            <File>
               <FileName>comKey.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\UserCode\CommonKey\comKey.c</FilePath>

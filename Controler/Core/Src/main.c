@@ -36,7 +36,6 @@
 #include "stdlib.h"
 #include "PID/pid.h"
 #include "Filter/filter.h"
-#include "74HC165/74HC165.h"
 #include "Compass/QMC5883L.h"
 #include "ST7735-HAL/st7735.h"
 #include "ICM42605/ICM42605.h"
@@ -63,16 +62,11 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-extern osSemaphoreId_t bQueuePutHandle;
 extern osMessageQueueId_t SensorMessageQueueHandle;
-
-spChanger_t paraKp, paraKi, paraKd;
 fusion_t icmFusion;
 
 char shBuff[256];
 char chBuff;
-
-int motor = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -139,10 +133,13 @@ int main(void)
   MX_SPI1_Init();
   MX_TIM15_Init();
   MX_TIM6_Init();
+  MX_TIM12_Init();
   /* USER CODE BEGIN 2 */
     // Encoders
     HAL_TIM_Encoder_Start(&htim1, TIM_CHANNEL_1);
     HAL_TIM_Encoder_Start(&htim1, TIM_CHANNEL_2);
+    HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_1);
+    HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_2);
     HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_1);
     HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_2);
     HAL_TIM_Encoder_Start(&htim4, TIM_CHANNEL_1);
@@ -151,12 +148,11 @@ int main(void)
     HAL_TIM_Encoder_Start(&htim8, TIM_CHANNEL_2);
 
     // Motors
-    HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
-    HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
-    HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_3);
-    HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_4);
-
-    // Step Motors
+    HAL_TIM_PWM_Start(&htim12, TIM_CHANNEL_1);
+    HAL_TIM_PWM_Start(&htim12, TIM_CHANNEL_2);
+    HAL_TIM_PWM_Start(&htim15, TIM_CHANNEL_1);
+    HAL_TIM_PWM_Start(&htim15, TIM_CHANNEL_2);
+    HAL_TIM_PWM_Start(&htim16, TIM_CHANNEL_1);
 
     // Screen
     ST7735_Init();
@@ -203,9 +199,6 @@ int main(void)
     CarInfo.initGyOffset /= 100;
     CarInfo.initGzOffset /= 100;
 
-
-//    sprintf(buffer, "Initing ICM...\n");
-//    LCD_StringLayout(128, buffer, Font_11x18, ST7735_BLACK, ST7735_WHITE);
     if ((res = ICM42605_Init()) != 0) {
         char buff[64];
         sprintf(buff, "ICM42605 Init Error\n");
@@ -217,6 +210,9 @@ int main(void)
     LCD_StringLayout(LCD_EOP);
 
     // Soft Init
+    PID_Init(&CarInfo.msPid[4], 8, 0.45f, 0);//0, 0.2, 0,
+    PID_Init(&CarInfo.mpPid[4], 0.15f, 0, 0);// 0.033, 0, 0,
+
     KeyInit();
 
     shell.write = uart_charPut;
@@ -385,7 +381,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
             sOptical,
         } SensorType;
         TIM_TypeDef *TIMx;
-        static int16_t preCNT[4];
+        static int16_t preCNT[5];
         static int16_t sumX, sumY;
 
         // Handle Key Event
@@ -409,10 +405,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
             osMessageQueuePut(SensorMessageQueueHandle, &SensorType, 0, 0);
 
             // Get motor speed
-            for (int16_t i = 0; i < 4; i++) {
-                TIM_TypeDef *TIMptr[4] = {TIM8, TIM1, TIM4, TIM3};
+            for (int16_t i = 0; i < 5; i++) {
+                TIM_TypeDef *TIMptr[5] = {TIM8, TIM1, TIM4, TIM2, TIM3};
                 int16_t res = 0;
-                if (i == 1 || i == 2)
+                if (i == 1 || i == 2 || i == 3)
                     CarInfo.spd[i] = -1 * ((int16_t) (TIMptr[i]->CNT) - preCNT[i]);
                 else
                     CarInfo.spd[i] = (int16_t) ((TIMptr[i]->CNT) - preCNT[i]);
@@ -420,7 +416,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
             }
 
             // Get Motor Position
-            for (int i = 0; i < 4; i++)
+            for (int i = 0; i < 5; i++)
                 CarInfo.psi[i] += CarInfo.spd[i];
 
             // Map PID
@@ -442,11 +438,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
             CarInfo.avPidOut = CarInfo.avPidOut > temp ? temp : CarInfo.avPidOut < -temp ? -temp : CarInfo.avPidOut;
 
             // Motor PID
-            for (int i = 0; i < 4; i++) {
+            for (int i = 0; i < 5; i++) {
                 volatile uint8_t dir = 1;
 
                 // Optional position loop 
-                if (CarInfo.mPsiCtr) {
+                if (i == 4 || CarInfo.mPsiCtr) {
                     CarInfo.spdStep = 0.5f;
                     float *outPtr = &CarInfo.mpPIDout[i];
                     float res = PID_Realize(&CarInfo.mpPid[i], CarInfo.psi[i]);
@@ -474,6 +470,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
                     case 3:
                         CarInfo.msPid[i].ctr.aim =
                                 (CarInfo.mPsiCtr ? CarInfo.mpPIDout[i] : CarInfo.spdAim[i]) - CarInfo.avPidOut;
+                        break;
+                    case 4:
+                        CarInfo.msPid[i].ctr.aim = CarInfo.mpPIDout[i];
                         break;
                 }
 
