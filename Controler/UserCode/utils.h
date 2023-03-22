@@ -22,6 +22,9 @@
 #define PMW_X_Grid (0)
 #define PMW_Y_Grid (0)
 
+#define CLIP_CLOSE (1000)
+#define CLIP_OPEN  (900)
+
 #define IsCarStatic (!CarInfo.isCarMoving)
 
 #define LimitFloat(input, min, max) do{ \
@@ -42,14 +45,14 @@
 
 typedef struct CarControlBlock {
     // 电机控制相关
-    int16_t spd[4];
-    float spdAim[4];
-    Pid_t msPid[4]; // motor speed pid
-    float psi[4];
-    Pid_t mpPid[4]; // motor position pid
-    float mpPIDout[4];
+    int16_t spd[5];
+    float spdAim[5];
+    Pid_t msPid[5]; // motor speed pid
+    float psi[5];
+    Pid_t mpPid[5]; // motor position pid
+    float mpPIDout[5];
     float spdStep;
-    float spdLimit[4];
+    float spdLimit[5];
     bool mPsiCtr: 1;// 启用电机位置环控制标志位
     bool firstPsiLoop: 1;// 首次进入位置环标志
 
