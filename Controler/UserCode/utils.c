@@ -102,6 +102,8 @@ static void __RunMainState(void) {
             CarInfo.mainState = mDrop;
             break;
         case mDrop:// 放下物块
+            MoveTo(5.5f, 3.5f);
+
 
             CarInfo.mainState = mEnd;
             break;
@@ -119,7 +121,7 @@ CCB_Typedef CarInfo = {
         .gyroConfi = 0.8f,
         .mPsiCtr = 0,
         .cPsiCtr = 1,
-        .spdLimit = {20, 20, 20, 20},
+        .spdLimit = {20, 20, 20, 20, 10},
         .mainState = mStart,
         .SerialOutputEnable = 0,
         .RunMainState = __RunMainState,
@@ -156,13 +158,17 @@ void LCD_StringLayout(uint16_t maxY, char *buff, FontDef font, uint16_t color, u
 
 /**
  * @brief 龙门支撑底座旋转
- * @param position 旋转角度,面向前方为0°(范围:-9.6~230.4)
+ * @param position 旋转位置（0-1000）
  * @param time 旋转所需时间(单位:ms)
  */
 void SupportRotation(float position, uint32_t time) {
-    position = position > 230.4f ? 230.4f : position < -9.6f ? -9.6f : position;
-    LobotSerialServoMove(SupportServoID, (int16_t) (960 - (position * 25 / 6)), time);
-    HAL_Delay(time + 100);
+    LobotSerialServoMove(SupportServoID, (int16_t) position, time);
+}
+
+void SupportRotationForOS(float dig, uint32_t time) {
+    int16_t position = (int16_t) (dig * 77.0f / 18 + 10);
+    LobotSerialServoMove(SupportServoID, (int16_t) position, time);
+    osDelay(time + 100);
 }
 
 /**
@@ -172,7 +178,15 @@ void SupportRotation(float position, uint32_t time) {
  */
 void ClipRotition(float position, uint32_t time) {
     LobotSerialServoMove(ClipServoID, (int16_t) position, time);
-    HAL_Delay(time + 100);
+//    HAL_Delay(time + 100);
+}
+
+void ClipCloseForOS(void) {
+    ClipRotition(CLIP_CLOSE, 700);
+}
+
+void ClipOpenForOS(void) {
+    ClipRotition(CLIP_OPEN, 700);
 }
 
 extern char chBuff;
