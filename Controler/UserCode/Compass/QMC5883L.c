@@ -31,9 +31,9 @@ int QMC5883_GetData(hmcData_t *data) {
     data->My = (float) (int16_t) (temp[3] << 8 | temp[2]);
     data->Mz = (float) (int16_t) (temp[5] << 8 | temp[4]);
 
-    data->Mx += -803.3423f;
-//    data->Mx *= 1000.0f / 1700;
-    data->My += -25.2752f;
-//    data->My *= 1000.0f / 1468;
+    data->Mx += -837.058f;
+    data->Mx *= 1000.0f / 1700;
+    data->My += -137.762f;
+    data->My *= 1000.0f / 1468;
     return 0;
 }
