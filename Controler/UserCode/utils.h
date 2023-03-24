@@ -19,8 +19,8 @@
 #define ToDig(rad) (rad * 57.295779513082320876798154814105f)
 #define ToRad(dig) (dig * 0.01745329251994329576923690768489f)
 
-#define PMW_X_Grid (0)
-#define PMW_Y_Grid (0)
+#define PMW_X_Grid (800)
+#define PMW_Y_Grid (800)
 
 #define CLIP_CLOSE (1000)
 #define CLIP_OPEN  (900)
@@ -59,17 +59,20 @@ typedef struct CarControlBlock {
     // 整车控制相关
     PMW3901 pmw;
     float dx, dy;
-    float curX, curY;
+    volatile float curX, curY;
     Pid_t cpPidX, cpPidY;// Car position pid
     float spdX, spdY;
     bool cPsiCtr: 1;
     bool SerialOutputEnable: 1;
     bool Pi_Reset: 1;
+    bool Start_State: 1;
+    volatile bool PiReceiveFlag: 1;
 
     // 整车姿态相关数据
     hmcData_t hmc;
     icmData_t icm;
     float yaw;// 弧度制
+    int16_t yawOverFlowTime;
     float gyroConfi;
     float initYawOffset;
     float initGxOffset;
@@ -100,6 +103,8 @@ void LCD_StringLayout(uint16_t maxY, char *buff, FontDef font, uint16_t color, u
 
 void SupportRotation(float position, uint32_t time);
 
+void SupportRotationForOS(float dig, uint32_t time);
+
 void ClipRotition(float position, uint32_t time);
 
 void MoveTo(float X, float Y);
@@ -113,5 +118,9 @@ void Pi_SwitchFromHAL(void);
 void Pi_ResetFromOS(void);
 
 void Pi_ResetFromHAL(void);
+
+void Data_ReFormatData(uint16_t *array, int len);
+
+uint8_t Data_RoughlyEqual(double curY, double curX, double aimY, double aimX, double thre);
 
 #endif //CONTROLCENTER_UTILS_H
