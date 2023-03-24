@@ -211,8 +211,6 @@ int main(void) {
     ST7735_FillScreen(ST7735_WHITE);
     LCD_StringLayout(LCD_EOP);
 
-    SupportRotation(395, 500);
-
     // Soft Init
     PID_Init(&CarInfo.msPid[4], 8, 0.45f, 0);//0, 0.2, 0,
     PID_Init(&CarInfo.mpPid[4], 0.15f, 0, 0);// 0.033, 0, 0,
@@ -225,6 +223,10 @@ int main(void) {
     // Interrupt
     HAL_TIM_Base_Start_IT(&htim6);
     HAL_UART_Receive_IT(&huart5, (uint8_t *) &chBuff, 1);
+    CarInfo.mpPid[4].ctr.aim = -10000;
+    while (CarInfo.mpPid[4].ctr.aim != TopHeight);
+    HAL_Delay(300);
+    SupportRotation(90, 500);
     /* USER CODE END 2 */
 
     /* Init scheduler */
@@ -385,6 +387,14 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 
         // Handle Key Event
         ComKey_Handler();
+
+        // Check Clip limit
+        if (HAL_GPIO_ReadPin(ClipLimit_GPIO_Port, ClipLimit_Pin) == GPIO_PIN_SET) {
+            PID_Reset(&CarInfo.mpPid[4]);
+            PID_Reset(&CarInfo.msPid[4]);
+            CarInfo.psi[4] = 0;
+            CarInfo.mpPid[4].ctr.aim = TopHeight;
+        }
 
         // Get compass
         SensorType = sCompass;
