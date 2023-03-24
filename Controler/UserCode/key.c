@@ -68,5 +68,6 @@ void ComKey_MultipleClickCallback(comkey_t *key) {
     } else if (key == &keys[1]) {
         CarInfo.Pi_Reset = 1;
     } else if (key == &keys[0]) {
+        CarInfo.Start_State = 1;
     }
 }
