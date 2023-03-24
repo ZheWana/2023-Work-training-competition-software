@@ -55,59 +55,59 @@
 /* Definitions for IOcontrol */
 osThreadId_t IOcontrolHandle;
 const osThreadAttr_t IOcontrol_attributes = {
-  .name = "IOcontrol",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityLow,
+        .name = "IOcontrol",
+        .stack_size = 128 * 4,
+        .priority = (osPriority_t) osPriorityLow,
 };
 /* Definitions for SerialOutput */
 osThreadId_t SerialOutputHandle;
 const osThreadAttr_t SerialOutput_attributes = {
-  .name = "SerialOutput",
-  .stack_size = 512 * 4,
-  .priority = (osPriority_t) osPriorityLow,
+        .name = "SerialOutput",
+        .stack_size = 512 * 4,
+        .priority = (osPriority_t) osPriorityLow,
 };
 /* Definitions for StateMachine */
 osThreadId_t StateMachineHandle;
 const osThreadAttr_t StateMachine_attributes = {
-  .name = "StateMachine",
-  .stack_size = 512 * 4,
-  .priority = (osPriority_t) osPriorityLow,
+        .name = "StateMachine",
+        .stack_size = 512 * 4,
+        .priority = (osPriority_t) osPriorityLow,
 };
 /* Definitions for ScreenRefresh */
 osThreadId_t ScreenRefreshHandle;
 const osThreadAttr_t ScreenRefresh_attributes = {
-  .name = "ScreenRefresh",
-  .stack_size = 512 * 4,
-  .priority = (osPriority_t) osPriorityLow,
+        .name = "ScreenRefresh",
+        .stack_size = 512 * 4,
+        .priority = (osPriority_t) osPriorityLow,
 };
 /* Definitions for SensorHandle */
 osThreadId_t SensorHandleHandle;
 const osThreadAttr_t SensorHandle_attributes = {
-  .name = "SensorHandle",
-  .stack_size = 256 * 4,
-  .priority = (osPriority_t) osPriorityNormal,
+        .name = "SensorHandle",
+        .stack_size = 256 * 4,
+        .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for InfCalOpticalTa */
 osThreadId_t InfCalOpticalTaHandle;
 const osThreadAttr_t InfCalOpticalTa_attributes = {
-  .name = "InfCalOpticalTa",
-  .stack_size = 256 * 4,
-  .priority = (osPriority_t) osPriorityLow,
+        .name = "InfCalOpticalTa",
+        .stack_size = 256 * 4,
+        .priority = (osPriority_t) osPriorityLow,
 };
 /* Definitions for SensorMessageQueue */
 osMessageQueueId_t SensorMessageQueueHandle;
 const osMessageQueueAttr_t SensorMessageQueue_attributes = {
-  .name = "SensorMessageQueue"
+        .name = "SensorMessageQueue"
 };
 /* Definitions for KeyTimer */
 osTimerId_t KeyTimerHandle;
 const osTimerAttr_t KeyTimer_attributes = {
-  .name = "KeyTimer"
+        .name = "KeyTimer"
 };
 /* Definitions for bQueuePut */
 osSemaphoreId_t bQueuePutHandle;
 const osSemaphoreAttr_t bQueuePut_attributes = {
-  .name = "bQueuePut"
+        .name = "bQueuePut"
 };
 
 /* Private function prototypes -----------------------------------------------*/
@@ -118,11 +118,17 @@ static void u8ZeroFiller(uint8_t *data);
 /* USER CODE END FunctionPrototypes */
 
 void IOcontrolEntry(void *argument);
+
 void SerialOutputEntry(void *argument);
+
 void StateMachineEntry(void *argument);
+
 void ScreenRefreshEntry(void *argument);
+
 void SensorHandleEntry(void *argument);
+
 void InfCalOpticalEntry(void *argument);
+
 void KeyTimerCallback(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
@@ -133,64 +139,64 @@ void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
   * @retval None
   */
 void MX_FREERTOS_Init(void) {
-  /* USER CODE BEGIN Init */
+    /* USER CODE BEGIN Init */
 
-  /* USER CODE END Init */
+    /* USER CODE END Init */
 
-  /* USER CODE BEGIN RTOS_MUTEX */
+    /* USER CODE BEGIN RTOS_MUTEX */
     /* add mutexes, ... */
-  /* USER CODE END RTOS_MUTEX */
+    /* USER CODE END RTOS_MUTEX */
 
-  /* Create the semaphores(s) */
-  /* creation of bQueuePut */
-  bQueuePutHandle = osSemaphoreNew(1, 1, &bQueuePut_attributes);
+    /* Create the semaphores(s) */
+    /* creation of bQueuePut */
+    bQueuePutHandle = osSemaphoreNew(1, 1, &bQueuePut_attributes);
 
-  /* USER CODE BEGIN RTOS_SEMAPHORES */
+    /* USER CODE BEGIN RTOS_SEMAPHORES */
     /* add semaphores, ... */
-  /* USER CODE END RTOS_SEMAPHORES */
+    /* USER CODE END RTOS_SEMAPHORES */
 
-  /* Create the timer(s) */
-  /* creation of KeyTimer */
-  KeyTimerHandle = osTimerNew(KeyTimerCallback, osTimerPeriodic, NULL, &KeyTimer_attributes);
+    /* Create the timer(s) */
+    /* creation of KeyTimer */
+    KeyTimerHandle = osTimerNew(KeyTimerCallback, osTimerPeriodic, NULL, &KeyTimer_attributes);
 
-  /* USER CODE BEGIN RTOS_TIMERS */
+    /* USER CODE BEGIN RTOS_TIMERS */
     /* start timers, add new ones, ... */
-  /* USER CODE END RTOS_TIMERS */
+    /* USER CODE END RTOS_TIMERS */
 
-  /* Create the queue(s) */
-  /* creation of SensorMessageQueue */
-  SensorMessageQueueHandle = osMessageQueueNew (16, sizeof(uint16_t), &SensorMessageQueue_attributes);
+    /* Create the queue(s) */
+    /* creation of SensorMessageQueue */
+    SensorMessageQueueHandle = osMessageQueueNew(16, sizeof(uint16_t), &SensorMessageQueue_attributes);
 
-  /* USER CODE BEGIN RTOS_QUEUES */
+    /* USER CODE BEGIN RTOS_QUEUES */
     /* add queues, ... */
-  /* USER CODE END RTOS_QUEUES */
+    /* USER CODE END RTOS_QUEUES */
 
-  /* Create the thread(s) */
-  /* creation of IOcontrol */
-  IOcontrolHandle = osThreadNew(IOcontrolEntry, NULL, &IOcontrol_attributes);
+    /* Create the thread(s) */
+    /* creation of IOcontrol */
+    IOcontrolHandle = osThreadNew(IOcontrolEntry, NULL, &IOcontrol_attributes);
 
-  /* creation of SerialOutput */
-  SerialOutputHandle = osThreadNew(SerialOutputEntry, NULL, &SerialOutput_attributes);
+    /* creation of SerialOutput */
+    SerialOutputHandle = osThreadNew(SerialOutputEntry, NULL, &SerialOutput_attributes);
 
-  /* creation of StateMachine */
-  StateMachineHandle = osThreadNew(StateMachineEntry, NULL, &StateMachine_attributes);
+    /* creation of StateMachine */
+    StateMachineHandle = osThreadNew(StateMachineEntry, NULL, &StateMachine_attributes);
 
-  /* creation of ScreenRefresh */
-  ScreenRefreshHandle = osThreadNew(ScreenRefreshEntry, NULL, &ScreenRefresh_attributes);
+    /* creation of ScreenRefresh */
+    ScreenRefreshHandle = osThreadNew(ScreenRefreshEntry, NULL, &ScreenRefresh_attributes);
 
-  /* creation of SensorHandle */
-  SensorHandleHandle = osThreadNew(SensorHandleEntry, NULL, &SensorHandle_attributes);
+    /* creation of SensorHandle */
+    SensorHandleHandle = osThreadNew(SensorHandleEntry, NULL, &SensorHandle_attributes);
 
-  /* creation of InfCalOpticalTa */
-  InfCalOpticalTaHandle = osThreadNew(InfCalOpticalEntry, NULL, &InfCalOpticalTa_attributes);
+    /* creation of InfCalOpticalTa */
+    InfCalOpticalTaHandle = osThreadNew(InfCalOpticalEntry, NULL, &InfCalOpticalTa_attributes);
 
-  /* USER CODE BEGIN RTOS_THREADS */
+    /* USER CODE BEGIN RTOS_THREADS */
     /* add threads, ... */
-  /* USER CODE END RTOS_THREADS */
+    /* USER CODE END RTOS_THREADS */
 
-  /* USER CODE BEGIN RTOS_EVENTS */
+    /* USER CODE BEGIN RTOS_EVENTS */
     /* add events, ... */
-  /* USER CODE END RTOS_EVENTS */
+    /* USER CODE END RTOS_EVENTS */
 
 }
 
@@ -201,9 +207,8 @@ void MX_FREERTOS_Init(void) {
   * @retval None
   */
 /* USER CODE END Header_IOcontrolEntry */
-void IOcontrolEntry(void *argument)
-{
-  /* USER CODE BEGIN IOcontrolEntry */
+void IOcontrolEntry(void *argument) {
+    /* USER CODE BEGIN IOcontrolEntry */
     UNUSED(argument);
     /* Infinite loop */
     for (;;) {
@@ -213,7 +218,7 @@ void IOcontrolEntry(void *argument)
         osDelay(950);
         if (CarInfo.SerialOutputEnable)osThreadResume(SerialOutputHandle);
     }
-  /* USER CODE END IOcontrolEntry */
+    /* USER CODE END IOcontrolEntry */
 }
 
 /* USER CODE BEGIN Header_SerialOutputEntry */
@@ -223,9 +228,8 @@ void IOcontrolEntry(void *argument)
 * @retval None
 */
 /* USER CODE END Header_SerialOutputEntry */
-void SerialOutputEntry(void *argument)
-{
-  /* USER CODE BEGIN SerialOutputEntry */
+void SerialOutputEntry(void *argument) {
+    /* USER CODE BEGIN SerialOutputEntry */
     UNUSED(argument);
     /* Infinite loop */
     for (;;) {
@@ -264,7 +268,7 @@ void SerialOutputEntry(void *argument)
 
         printf("\r\n");
     }
-  /* USER CODE END SerialOutputEntry */
+    /* USER CODE END SerialOutputEntry */
 }
 
 /* USER CODE BEGIN Header_StateMachineEntry */
@@ -274,9 +278,8 @@ void SerialOutputEntry(void *argument)
 * @retval None
 */
 /* USER CODE END Header_StateMachineEntry */
-void StateMachineEntry(void *argument)
-{
-  /* USER CODE BEGIN StateMachineEntry */
+void StateMachineEntry(void *argument) {
+    /* USER CODE BEGIN StateMachineEntry */
     UNUSED(argument);
     /* Infinite loop */
     for (;;) {
@@ -284,7 +287,7 @@ void StateMachineEntry(void *argument)
             CarInfo.RunMainState();
         }
     }
-  /* USER CODE END StateMachineEntry */
+    /* USER CODE END StateMachineEntry */
 }
 
 /* USER CODE BEGIN Header_ScreenRefreshEntry */
@@ -294,9 +297,8 @@ void StateMachineEntry(void *argument)
 * @retval None
 */
 /* USER CODE END Header_ScreenRefreshEntry */
-void ScreenRefreshEntry(void *argument)
-{
-  /* USER CODE BEGIN ScreenRefreshEntry */
+void ScreenRefreshEntry(void *argument) {
+    /* USER CODE BEGIN ScreenRefreshEntry */
     UNUSED(argument);
     /* Infinite loop */
     for (;;) {
@@ -318,7 +320,7 @@ void ScreenRefreshEntry(void *argument)
         // End of page
         LCD_StringLayout(LCD_EOP);
     }
-  /* USER CODE END ScreenRefreshEntry */
+    /* USER CODE END ScreenRefreshEntry */
 }
 
 /* USER CODE BEGIN Header_SensorHandleEntry */
@@ -328,9 +330,8 @@ void ScreenRefreshEntry(void *argument)
 * @retval None
 */
 /* USER CODE END Header_SensorHandleEntry */
-void SensorHandleEntry(void *argument)
-{
-  /* USER CODE BEGIN SensorHandleEntry */
+void SensorHandleEntry(void *argument) {
+    /* USER CODE BEGIN SensorHandleEntry */
     UNUSED(argument);
     /* Infinite loop */
     for (;;) {
@@ -352,7 +353,7 @@ void SensorHandleEntry(void *argument)
                 VecRotate(CarInfo.hmc.Mx, CarInfo.hmc.My, CarInfo.initYawOffset);
 
                 prehYaw = hYaw;
-                // 磁力计溢出处�?
+                // 磁力计溢出处�??
                 hYaw = atan2f(CarInfo.hmc.Mx, CarInfo.hmc.My);
 
                 if (hYaw - prehYaw > M_PI) { // 拓展航向角坐标系
@@ -367,7 +368,7 @@ void SensorHandleEntry(void *argument)
 
 //                CarInfo.yaw = (float) (rYaw + (float) CarInfo.yawOverFlowTime * 2 * M_PI);
 
-                // �?螺仪积分角度
+                // �??螺仪积分角度
                 CarInfo.yaw += ToRad(CarInfo.icm.gz) * 1.2f * 0.001f;
 
                 taskEXIT_CRITICAL();
@@ -392,7 +393,7 @@ void SensorHandleEntry(void *argument)
                 break;
         }
     }
-  /* USER CODE END SensorHandleEntry */
+    /* USER CODE END SensorHandleEntry */
 }
 
 /* USER CODE BEGIN Header_InfCalOpticalEntry */
@@ -402,26 +403,26 @@ void SensorHandleEntry(void *argument)
 * @retval None
 */
 /* USER CODE END Header_InfCalOpticalEntry */
-void InfCalOpticalEntry(void *argument)
-{
-  /* USER CODE BEGIN InfCalOpticalEntry */
+void InfCalOpticalEntry(void *argument) {
+    /* USER CODE BEGIN InfCalOpticalEntry */
     UNUSED(argument);
     /* Infinite loop */
     for (;;) {
+        // Reset Pi
         if (CarInfo.Pi_Reset) {
             CarInfo.Pi_Reset = 0;
             Pi_ResetFromOS();
         }
+
         osDelay(10);
     }
-  /* USER CODE END InfCalOpticalEntry */
+    /* USER CODE END InfCalOpticalEntry */
 }
 
 /* KeyTimerCallback function */
-void KeyTimerCallback(void *argument)
-{
-  /* USER CODE BEGIN KeyTimerCallback */
-  /* USER CODE END KeyTimerCallback */
+void KeyTimerCallback(void *argument) {
+    /* USER CODE BEGIN KeyTimerCallback */
+    /* USER CODE END KeyTimerCallback */
 }
 
 /* Private application code --------------------------------------------------*/
