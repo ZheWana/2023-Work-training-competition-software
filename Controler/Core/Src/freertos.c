@@ -70,7 +70,7 @@ const osThreadAttr_t SerialOutput_attributes = {
 osThreadId_t StateMachineHandle;
 const osThreadAttr_t StateMachine_attributes = {
   .name = "StateMachine",
-  .stack_size = 128 * 4,
+  .stack_size = 512 * 4,
   .priority = (osPriority_t) osPriorityLow,
 };
 /* Definitions for ScreenRefresh */
@@ -241,8 +241,11 @@ void SerialOutputEntry(void *argument)
 //        printf("%f,", CarInfo.psi[0]);
 //        printf("%f,", CarInfo.mpPid[0].ctr.aim);
 //
-        printf("%f,", CarInfo.yaw);
-        printf("%f,", atan2f(CarInfo.hmc.Mx, CarInfo.hmc.My));
+//        printf("%f,", CarInfo.yaw);
+//        printf("%f,", atan2f(CarInfo.hmc.Mx, CarInfo.hmc.My));
+//        printf("%d,", CarInfo.yawOverFlowTime);
+//        printf("%f,", CarInfo.aPid.error.cur);
+//        printf("%f,", CarInfo.aPid.error.sum);
 //        printf("%f,", CarInfo.avPid.ctr.aim);
 
 //        printf("%f,", CarInfo.curX);
@@ -256,10 +259,10 @@ void SerialOutputEntry(void *argument)
 //        printf("%.3f,", CarInfo.icm.gx);
 //        printf("%.3f,", CarInfo.icm.gy);
         printf("%.3f,", CarInfo.icm.gz);
+//
+//        printf("%.3f,", CarInfo.avPid.error.sum);
 
-        printf("%.3f,", CarInfo.avPid.error.sum);
-
-//        printf("\r\n");
+        printf("\r\n");
     }
   /* USER CODE END SerialOutputEntry */
 }
@@ -277,7 +280,9 @@ void StateMachineEntry(void *argument)
     UNUSED(argument);
     /* Infinite loop */
     for (;;) {
-        CarInfo.RunMainState();
+        if (CarInfo.Start_State) {
+            CarInfo.RunMainState();
+        }
     }
   /* USER CODE END StateMachineEntry */
 }
@@ -336,6 +341,7 @@ void SensorHandleEntry(void *argument)
         } SensorType;
         static MovingFilter_t gyroFilter = {0};
         static float yawPre = 0;
+        static float prehYaw, hYaw, rYaw;
 
         osMessageQueueGet(SensorMessageQueueHandle, &SensorType, 0, osWaitForever);
 
@@ -344,15 +350,32 @@ void SensorHandleEntry(void *argument)
                 taskENTER_CRITICAL();
                 QMC5883_GetData(&CarInfo.hmc);
                 VecRotate(CarInfo.hmc.Mx, CarInfo.hmc.My, CarInfo.initYawOffset);
-                CarInfo.yaw = Filter_Smoothing(
-                        CarInfo.gyroConfi * (CarInfo.yaw + ToRad(CarInfo.icm.gz) * 0.001f)
-                        + (1 - CarInfo.gyroConfi) * atan2f(CarInfo.hmc.Mx, CarInfo.hmc.My), &yawPre, 0.5f);
+
+                prehYaw = hYaw;
+                // 磁力计溢出处�?
+                hYaw = atan2f(CarInfo.hmc.Mx, CarInfo.hmc.My);
+
+                if (hYaw - prehYaw > M_PI) { // 拓展航向角坐标系
+                    CarInfo.yawOverFlowTime--;
+                } else if (prehYaw - hYaw > M_PI) {
+                    CarInfo.yawOverFlowTime++;
+                }
+
+//                rYaw = CarInfo.gyroConfi * (rYaw + ToRad(CarInfo.icm.gz) * 0.001f)
+//                       + (1 - CarInfo.gyroConfi) * atan2f(CarInfo.hmc.Mx, CarInfo.hmc.My);
+//                rYaw = atan2f(CarInfo.hmc.Mx, CarInfo.hmc.My);
+
+//                CarInfo.yaw = (float) (rYaw + (float) CarInfo.yawOverFlowTime * 2 * M_PI);
+
+                // �?螺仪积分角度
+                CarInfo.yaw += ToRad(CarInfo.icm.gz) * 1.2f * 0.001f;
+
                 taskEXIT_CRITICAL();
                 break;
             case sGyro:
                 taskENTER_CRITICAL();
                 ICM42605_GetData(&CarInfo.icm, ICM_MODE_ACC | ICM_MODE_GYRO);
-                CarInfo.icm.gz = Filter_MovingAvgf(&gyroFilter, CarInfo.icm.gz) + 0.08f;
+                CarInfo.icm.gz = Filter_MovingAvgf(&gyroFilter, CarInfo.icm.gz) + 0.16431f;
                 taskEXIT_CRITICAL();
                 break;
             case sOptical:
