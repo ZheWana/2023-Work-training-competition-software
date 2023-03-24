@@ -11,42 +11,26 @@
 
 
 int Motor_Drive(int motorID, float duty, int dir) {
-    volatile TIM_TypeDef *TIMx = TIM2;
+    // 硬件引脚表
+    static TIM_TypeDef *TIMx[5] = {TIM12, TIM16, TIM12, TIM15, TIM15};
+    static volatile uint32_t *CCRx[5] =
+            {&TIM12->CCR1, &TIM16->CCR1, &TIM12->CCR2, &TIM15->CCR1, &TIM15->CCR2};
+    static GPIO_TypeDef *GPIOx[5] =
+            {Dir2_GPIO_Port, Dir3_GPIO_Port, Dir1_GPIO_Port, Dir4_GPIO_Port, DirStep_GPIO_Port};
+    static const uint32_t GPIO_Pinx[5] = {Dir2_Pin, Dir3_Pin, Dir1_Pin, Dir4_Pin, DirStep_Pin};
 
-    volatile uint32_t *CCRx = NULL;
-    GPIO_TypeDef *GPIOx = NULL;
-    uint32_t GPIO_Pinx = 0, pinState = 0;
+    uint32_t pinState = 0;
 
     if (duty > 100)duty = 100;
     else if (duty < 0)duty = 0;
 
-    if (motorID == 0||motorID ==3)
+    if (motorID == 0 || motorID == 3)
         pinState = dir;
     else
         pinState = !dir;
 
-    if (motorID == 0) {
-        CCRx = &TIMx->CCR2;
-        GPIOx = Dir2_GPIO_Port;
-        GPIO_Pinx = Dir2_Pin;
-    } else if (motorID == 1) {
-        CCRx = &TIMx->CCR3;
-        GPIOx = Dir3_GPIO_Port;
-        GPIO_Pinx = Dir3_Pin;
-    } else if (motorID == 2) {
-        CCRx = &TIMx->CCR1;
-        GPIOx = Dir1_GPIO_Port;
-        GPIO_Pinx = Dir1_Pin;
-    } else if (motorID == 3) {
-        CCRx = &TIMx->CCR4;
-        GPIOx = Dir4_GPIO_Port;
-        GPIO_Pinx = Dir4_Pin;
-    } else {
-        return -1;
-    }
-
-    *CCRx = (uint32_t) ((float) (TIMx->ARR) * duty / 100);
-    HAL_GPIO_WritePin(GPIOx, GPIO_Pinx, pinState);
+    *CCRx[motorID] = (uint32_t) ((float) (TIMx[motorID]->ARR) * duty / 100);
+    HAL_GPIO_WritePin(GPIOx[motorID], GPIO_Pinx[motorID], pinState);
 
     return 0;
 }

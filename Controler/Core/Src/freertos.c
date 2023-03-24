@@ -27,13 +27,10 @@
 /* USER CODE BEGIN Includes */
 #include "utils.h"
 #include "printf.h"
-#include "74HC165/74HC165.h"
 #include "Compass/QMC5883L.h"
 #include "ST7735-HAL/st7735.h"
 #include "LobotSerialServo/LobotSerialServo.h"
 #include "Filter/filter.h"
-#include "freertos_os2.h"
-#include "move.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -58,59 +55,59 @@
 /* Definitions for IOcontrol */
 osThreadId_t IOcontrolHandle;
 const osThreadAttr_t IOcontrol_attributes = {
-        .name = "IOcontrol",
-        .stack_size = 128 * 4,
-        .priority = (osPriority_t) osPriorityLow,
+  .name = "IOcontrol",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityLow,
 };
 /* Definitions for SerialOutput */
 osThreadId_t SerialOutputHandle;
 const osThreadAttr_t SerialOutput_attributes = {
-        .name = "SerialOutput",
-        .stack_size = 512 * 4,
-        .priority = (osPriority_t) osPriorityLow,
+  .name = "SerialOutput",
+  .stack_size = 512 * 4,
+  .priority = (osPriority_t) osPriorityLow,
 };
 /* Definitions for StateMachine */
 osThreadId_t StateMachineHandle;
 const osThreadAttr_t StateMachine_attributes = {
-        .name = "StateMachine",
-        .stack_size = 128 * 4,
-        .priority = (osPriority_t) osPriorityLow,
+  .name = "StateMachine",
+  .stack_size = 512 * 4,
+  .priority = (osPriority_t) osPriorityLow,
 };
 /* Definitions for ScreenRefresh */
 osThreadId_t ScreenRefreshHandle;
 const osThreadAttr_t ScreenRefresh_attributes = {
-        .name = "ScreenRefresh",
-        .stack_size = 512 * 4,
-        .priority = (osPriority_t) osPriorityLow,
+  .name = "ScreenRefresh",
+  .stack_size = 512 * 4,
+  .priority = (osPriority_t) osPriorityLow,
 };
 /* Definitions for SensorHandle */
 osThreadId_t SensorHandleHandle;
 const osThreadAttr_t SensorHandle_attributes = {
-        .name = "SensorHandle",
-        .stack_size = 256 * 4,
-        .priority = (osPriority_t) osPriorityNormal,
+  .name = "SensorHandle",
+  .stack_size = 256 * 4,
+  .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for InfCalOpticalTa */
 osThreadId_t InfCalOpticalTaHandle;
 const osThreadAttr_t InfCalOpticalTa_attributes = {
-        .name = "InfCalOpticalTa",
-        .stack_size = 256 * 4,
-        .priority = (osPriority_t) osPriorityLow,
+  .name = "InfCalOpticalTa",
+  .stack_size = 256 * 4,
+  .priority = (osPriority_t) osPriorityLow,
 };
 /* Definitions for SensorMessageQueue */
 osMessageQueueId_t SensorMessageQueueHandle;
 const osMessageQueueAttr_t SensorMessageQueue_attributes = {
-        .name = "SensorMessageQueue"
+  .name = "SensorMessageQueue"
 };
 /* Definitions for KeyTimer */
 osTimerId_t KeyTimerHandle;
 const osTimerAttr_t KeyTimer_attributes = {
-        .name = "KeyTimer"
+  .name = "KeyTimer"
 };
 /* Definitions for bQueuePut */
 osSemaphoreId_t bQueuePutHandle;
 const osSemaphoreAttr_t bQueuePut_attributes = {
-        .name = "bQueuePut"
+  .name = "bQueuePut"
 };
 
 /* Private function prototypes -----------------------------------------------*/
@@ -121,17 +118,11 @@ static void u8ZeroFiller(uint8_t *data);
 /* USER CODE END FunctionPrototypes */
 
 void IOcontrolEntry(void *argument);
-
 void SerialOutputEntry(void *argument);
-
 void StateMachineEntry(void *argument);
-
 void ScreenRefreshEntry(void *argument);
-
 void SensorHandleEntry(void *argument);
-
 void InfCalOpticalEntry(void *argument);
-
 void KeyTimerCallback(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
@@ -142,64 +133,64 @@ void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
   * @retval None
   */
 void MX_FREERTOS_Init(void) {
-    /* USER CODE BEGIN Init */
+  /* USER CODE BEGIN Init */
 
-    /* USER CODE END Init */
+  /* USER CODE END Init */
 
-    /* USER CODE BEGIN RTOS_MUTEX */
+  /* USER CODE BEGIN RTOS_MUTEX */
     /* add mutexes, ... */
-    /* USER CODE END RTOS_MUTEX */
+  /* USER CODE END RTOS_MUTEX */
 
-    /* Create the semaphores(s) */
-    /* creation of bQueuePut */
-    bQueuePutHandle = osSemaphoreNew(1, 1, &bQueuePut_attributes);
+  /* Create the semaphores(s) */
+  /* creation of bQueuePut */
+  bQueuePutHandle = osSemaphoreNew(1, 1, &bQueuePut_attributes);
 
-    /* USER CODE BEGIN RTOS_SEMAPHORES */
+  /* USER CODE BEGIN RTOS_SEMAPHORES */
     /* add semaphores, ... */
-    /* USER CODE END RTOS_SEMAPHORES */
+  /* USER CODE END RTOS_SEMAPHORES */
 
-    /* Create the timer(s) */
-    /* creation of KeyTimer */
-    KeyTimerHandle = osTimerNew(KeyTimerCallback, osTimerPeriodic, NULL, &KeyTimer_attributes);
+  /* Create the timer(s) */
+  /* creation of KeyTimer */
+  KeyTimerHandle = osTimerNew(KeyTimerCallback, osTimerPeriodic, NULL, &KeyTimer_attributes);
 
-    /* USER CODE BEGIN RTOS_TIMERS */
+  /* USER CODE BEGIN RTOS_TIMERS */
     /* start timers, add new ones, ... */
-    /* USER CODE END RTOS_TIMERS */
+  /* USER CODE END RTOS_TIMERS */
 
-    /* Create the queue(s) */
-    /* creation of SensorMessageQueue */
-    SensorMessageQueueHandle = osMessageQueueNew(16, sizeof(uint16_t), &SensorMessageQueue_attributes);
+  /* Create the queue(s) */
+  /* creation of SensorMessageQueue */
+  SensorMessageQueueHandle = osMessageQueueNew (16, sizeof(uint16_t), &SensorMessageQueue_attributes);
 
-    /* USER CODE BEGIN RTOS_QUEUES */
+  /* USER CODE BEGIN RTOS_QUEUES */
     /* add queues, ... */
-    /* USER CODE END RTOS_QUEUES */
+  /* USER CODE END RTOS_QUEUES */
 
-    /* Create the thread(s) */
-    /* creation of IOcontrol */
-    IOcontrolHandle = osThreadNew(IOcontrolEntry, NULL, &IOcontrol_attributes);
+  /* Create the thread(s) */
+  /* creation of IOcontrol */
+  IOcontrolHandle = osThreadNew(IOcontrolEntry, NULL, &IOcontrol_attributes);
 
-    /* creation of SerialOutput */
-    SerialOutputHandle = osThreadNew(SerialOutputEntry, NULL, &SerialOutput_attributes);
+  /* creation of SerialOutput */
+  SerialOutputHandle = osThreadNew(SerialOutputEntry, NULL, &SerialOutput_attributes);
 
-    /* creation of StateMachine */
-    StateMachineHandle = osThreadNew(StateMachineEntry, NULL, &StateMachine_attributes);
+  /* creation of StateMachine */
+  StateMachineHandle = osThreadNew(StateMachineEntry, NULL, &StateMachine_attributes);
 
-    /* creation of ScreenRefresh */
-    ScreenRefreshHandle = osThreadNew(ScreenRefreshEntry, NULL, &ScreenRefresh_attributes);
+  /* creation of ScreenRefresh */
+  ScreenRefreshHandle = osThreadNew(ScreenRefreshEntry, NULL, &ScreenRefresh_attributes);
 
-    /* creation of SensorHandle */
-    SensorHandleHandle = osThreadNew(SensorHandleEntry, NULL, &SensorHandle_attributes);
+  /* creation of SensorHandle */
+  SensorHandleHandle = osThreadNew(SensorHandleEntry, NULL, &SensorHandle_attributes);
 
-    /* creation of InfCalOpticalTa */
-    InfCalOpticalTaHandle = osThreadNew(InfCalOpticalEntry, NULL, &InfCalOpticalTa_attributes);
+  /* creation of InfCalOpticalTa */
+  InfCalOpticalTaHandle = osThreadNew(InfCalOpticalEntry, NULL, &InfCalOpticalTa_attributes);
 
-    /* USER CODE BEGIN RTOS_THREADS */
+  /* USER CODE BEGIN RTOS_THREADS */
     /* add threads, ... */
-    /* USER CODE END RTOS_THREADS */
+  /* USER CODE END RTOS_THREADS */
 
-    /* USER CODE BEGIN RTOS_EVENTS */
+  /* USER CODE BEGIN RTOS_EVENTS */
     /* add events, ... */
-    /* USER CODE END RTOS_EVENTS */
+  /* USER CODE END RTOS_EVENTS */
 
 }
 
@@ -210,8 +201,9 @@ void MX_FREERTOS_Init(void) {
   * @retval None
   */
 /* USER CODE END Header_IOcontrolEntry */
-_Noreturn void IOcontrolEntry(void *argument) {
-    /* USER CODE BEGIN IOcontrolEntry */
+void IOcontrolEntry(void *argument)
+{
+  /* USER CODE BEGIN IOcontrolEntry */
     UNUSED(argument);
     /* Infinite loop */
     for (;;) {
@@ -221,7 +213,7 @@ _Noreturn void IOcontrolEntry(void *argument) {
         osDelay(950);
         if (CarInfo.SerialOutputEnable)osThreadResume(SerialOutputHandle);
     }
-    /* USER CODE END IOcontrolEntry */
+  /* USER CODE END IOcontrolEntry */
 }
 
 /* USER CODE BEGIN Header_SerialOutputEntry */
@@ -231,8 +223,9 @@ _Noreturn void IOcontrolEntry(void *argument) {
 * @retval None
 */
 /* USER CODE END Header_SerialOutputEntry */
-_Noreturn void SerialOutputEntry(void *argument) {
-    /* USER CODE BEGIN SerialOutputEntry */
+void SerialOutputEntry(void *argument)
+{
+  /* USER CODE BEGIN SerialOutputEntry */
     UNUSED(argument);
     /* Infinite loop */
     for (;;) {
@@ -248,8 +241,11 @@ _Noreturn void SerialOutputEntry(void *argument) {
 //        printf("%f,", CarInfo.psi[0]);
 //        printf("%f,", CarInfo.mpPid[0].ctr.aim);
 //
-        printf("%f,", CarInfo.yaw);
-        printf("%f,", atan2f(CarInfo.hmc.Mx, CarInfo.hmc.My));
+//        printf("%f,", CarInfo.yaw);
+//        printf("%f,", atan2f(CarInfo.hmc.Mx, CarInfo.hmc.My));
+//        printf("%d,", CarInfo.yawOverFlowTime);
+//        printf("%f,", CarInfo.aPid.error.cur);
+//        printf("%f,", CarInfo.aPid.error.sum);
 //        printf("%f,", CarInfo.avPid.ctr.aim);
 
 //        printf("%f,", CarInfo.curX);
@@ -257,28 +253,18 @@ _Noreturn void SerialOutputEntry(void *argument) {
 //        printf("%f,", CarInfo.curY);
 //        printf("%f,", CarInfo.cpPidY.ctr.aim);
 
-//        printf("\r\n");
-//        for (int i = 0; i < 32; i++) {
-//            printf("%d", CarInfo.inf & (1 << i) ? 1 : 0);
-//        }
-
         printf("%.3f,", CarInfo.hmc.Mx);
         printf("%.3f,", CarInfo.hmc.My);
+
 //        printf("%.3f,", CarInfo.icm.gx);
 //        printf("%.3f,", CarInfo.icm.gy);
         printf("%.3f,", CarInfo.icm.gz);
-        printf("%.3f,", CarInfo.avPid.error.sum);
+//
+//        printf("%.3f,", CarInfo.avPid.error.sum);
 
-//        printf("%f,", CarInfo.icm.ax);
-//        printf("%f,", CarInfo.icm.ay);
-//        printf("%f,", CarInfo.icm.az);
-//        printf("%f,", CarInfo.icm.gx);
-//        printf("%f,", CarInfo.icm.gy);
-//        printf("%f,", CarInfo.icm.gz);
-
-//        printf("\r\n");
+        printf("\r\n");
     }
-    /* USER CODE END SerialOutputEntry */
+  /* USER CODE END SerialOutputEntry */
 }
 
 /* USER CODE BEGIN Header_StateMachineEntry */
@@ -288,14 +274,17 @@ _Noreturn void SerialOutputEntry(void *argument) {
 * @retval None
 */
 /* USER CODE END Header_StateMachineEntry */
-_Noreturn void StateMachineEntry(void *argument) {
-    /* USER CODE BEGIN StateMachineEntry */
+void StateMachineEntry(void *argument)
+{
+  /* USER CODE BEGIN StateMachineEntry */
     UNUSED(argument);
     /* Infinite loop */
     for (;;) {
-//        CarInfo.RunMainState();
+        if (CarInfo.Start_State) {
+            CarInfo.RunMainState();
+        }
     }
-    /* USER CODE END StateMachineEntry */
+  /* USER CODE END StateMachineEntry */
 }
 
 /* USER CODE BEGIN Header_ScreenRefreshEntry */
@@ -305,8 +294,9 @@ _Noreturn void StateMachineEntry(void *argument) {
 * @retval None
 */
 /* USER CODE END Header_ScreenRefreshEntry */
-_Noreturn void ScreenRefreshEntry(void *argument) {
-    /* USER CODE BEGIN ScreenRefreshEntry */
+void ScreenRefreshEntry(void *argument)
+{
+  /* USER CODE BEGIN ScreenRefreshEntry */
     UNUSED(argument);
     /* Infinite loop */
     for (;;) {
@@ -316,27 +306,6 @@ _Noreturn void ScreenRefreshEntry(void *argument) {
         pretick = HAL_GetTick();
         sprintf(buff, "FPS:%.3f\n", fps);
         LCD_StringLayout(128, buff, Font_7x10, ST7735_BLACK, ST7735_WHITE);
-
-        for (int i = 0; i < 16; i++) {
-            buff[i] = CarInfo.infr.rawData & (1 << i) ? '1' : '0';
-        }
-        buff[16] = '\0';
-        LCD_StringLayout(128, buff, Font_7x10, ST7735_BLACK, ST7735_WHITE);
-
-        for (int i = 0; i < 16; i++) {
-            buff[i] = CarInfo.infr.rawData & (1 << (i + 16)) ? '1' : '0';
-        }
-        buff[16] = '\0';
-        LCD_StringLayout(128, buff, Font_7x10, ST7735_BLACK, ST7735_WHITE);
-
-        for (int i = 0; i < 4; i++) {
-            sprintf(&buff[0], "%d :", i);
-            for (int j = 0; j < 8; j++) {
-                sprintf(&buff[3 + j], "%d", CarInfo.infrRecord[i] & (1 << j) ? 1 : 0);
-            }
-            sprintf(&buff[11], "\n\0");
-            LCD_StringLayout(128, buff, Font_7x10, ST7735_BLACK, ST7735_WHITE);
-        }
 
         sprintf(buff, CarInfo.yaw > 0 ? "Yaw: %.3f\n" : "Yaw:%.3f\n", ToDig(CarInfo.yaw));
         LCD_StringLayout(128, buff, Font_11x18, ST7735_BLACK, ST7735_WHITE);
@@ -349,7 +318,7 @@ _Noreturn void ScreenRefreshEntry(void *argument) {
         // End of page
         LCD_StringLayout(LCD_EOP);
     }
-    /* USER CODE END ScreenRefreshEntry */
+  /* USER CODE END ScreenRefreshEntry */
 }
 
 /* USER CODE BEGIN Header_SensorHandleEntry */
@@ -359,53 +328,54 @@ _Noreturn void ScreenRefreshEntry(void *argument) {
 * @retval None
 */
 /* USER CODE END Header_SensorHandleEntry */
-void SensorHandleEntry(void *argument) {
-    /* USER CODE BEGIN SensorHandleEntry */
+void SensorHandleEntry(void *argument)
+{
+  /* USER CODE BEGIN SensorHandleEntry */
     UNUSED(argument);
     /* Infinite loop */
     for (;;) {
         static enum SensorType {
-            sInfrared,
             sCompass,
             sGyro,
             sOptical,
         } SensorType;
         static MovingFilter_t gyroFilter = {0};
         static float yawPre = 0;
+        static float prehYaw, hYaw, rYaw;
 
         osMessageQueueGet(SensorMessageQueueHandle, &SensorType, 0, osWaitForever);
 
         switch (SensorType) {
-            case sInfrared: {
-                HC165_Get_Data(&CarInfo.infr.rawData);
-
-                // Byte inversion
-                uint8_t a = 0, b = 0;
-                for (int i = 0; i < 8; i++) {
-                    a |= CarInfo.infr.data[InfrDir.inFront] & (1 << i) ? 1 << (7 - i) : 0;
-                    b |= CarInfo.infr.data[InfrDir.inLeft] & (1 << i) ? 1 << (7 - i) : 0;
-                }
-                CarInfo.infr.data[InfrDir.inFront] = a;
-                CarInfo.infr.data[InfrDir.inLeft] = b;
-
-                // 反转黑白
-//                CarInfo.infr.rawData = ~CarInfo.infr.rawData;
-            }
-                break;
             case sCompass:
                 taskENTER_CRITICAL();
                 QMC5883_GetData(&CarInfo.hmc);
                 VecRotate(CarInfo.hmc.Mx, CarInfo.hmc.My, CarInfo.initYawOffset);
-                CarInfo.yaw = Filter_Smoothing(
-                        CarInfo.gyroConfi * (CarInfo.yaw + ToRad(CarInfo.icm.gz) * 0.001f)
-                        + (1 - CarInfo.gyroConfi) * atan2f(CarInfo.hmc.Mx, CarInfo.hmc.My), &yawPre, 0.5f);
-//                CarInfo.yaw = Filter_MovingAvgf(&yawFilter, atan2f(CarInfo.hmc.Mx, CarInfo.hmc.My));
+
+                prehYaw = hYaw;
+                // 磁力计溢出处�?
+                hYaw = atan2f(CarInfo.hmc.Mx, CarInfo.hmc.My);
+
+                if (hYaw - prehYaw > M_PI) { // 拓展航向角坐标系
+                    CarInfo.yawOverFlowTime--;
+                } else if (prehYaw - hYaw > M_PI) {
+                    CarInfo.yawOverFlowTime++;
+                }
+
+//                rYaw = CarInfo.gyroConfi * (rYaw + ToRad(CarInfo.icm.gz) * 0.001f)
+//                       + (1 - CarInfo.gyroConfi) * atan2f(CarInfo.hmc.Mx, CarInfo.hmc.My);
+//                rYaw = atan2f(CarInfo.hmc.Mx, CarInfo.hmc.My);
+
+//                CarInfo.yaw = (float) (rYaw + (float) CarInfo.yawOverFlowTime * 2 * M_PI);
+
+                // �?螺仪积分角度
+                CarInfo.yaw += ToRad(CarInfo.icm.gz) * 1.2f * 0.001f;
+
                 taskEXIT_CRITICAL();
                 break;
             case sGyro:
                 taskENTER_CRITICAL();
                 ICM42605_GetData(&CarInfo.icm, ICM_MODE_ACC | ICM_MODE_GYRO);
-                CarInfo.icm.gz = Filter_MovingAvgf(&gyroFilter, CarInfo.icm.gz) + 0.08f;
+                CarInfo.icm.gz = Filter_MovingAvgf(&gyroFilter, CarInfo.icm.gz) + 0.16431f;
                 taskEXIT_CRITICAL();
                 break;
             case sOptical:
@@ -422,7 +392,7 @@ void SensorHandleEntry(void *argument) {
                 break;
         }
     }
-    /* USER CODE END SensorHandleEntry */
+  /* USER CODE END SensorHandleEntry */
 }
 
 /* USER CODE BEGIN Header_InfCalOpticalEntry */
@@ -432,59 +402,29 @@ void SensorHandleEntry(void *argument) {
 * @retval None
 */
 /* USER CODE END Header_InfCalOpticalEntry */
-void InfCalOpticalEntry(void *argument) {
-    /* USER CODE BEGIN InfCalOpticalEntry */
+void InfCalOpticalEntry(void *argument)
+{
+  /* USER CODE BEGIN InfCalOpticalEntry */
     UNUSED(argument);
     /* Infinite loop */
     for (;;) {
-
+        if (CarInfo.Pi_Reset) {
+            CarInfo.Pi_Reset = 0;
+            Pi_ResetFromOS();
+        }
+        osDelay(10);
     }
-    /* USER CODE END InfCalOpticalEntry */
+  /* USER CODE END InfCalOpticalEntry */
 }
 
 /* KeyTimerCallback function */
-void KeyTimerCallback(void *argument) {
-    /* USER CODE BEGIN KeyTimerCallback */
-    /* USER CODE END KeyTimerCallback */
+void KeyTimerCallback(void *argument)
+{
+  /* USER CODE BEGIN KeyTimerCallback */
+  /* USER CODE END KeyTimerCallback */
 }
 
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
-
-void u8ZeroFiller(uint8_t *data) {
-    enum {
-        fetch1,
-        fetch0,
-        fill,
-    } state;
-
-    uint8_t filler = 0;
-    for (int i = 0; i < 8; i++) {
-        switch (state) {
-            case fetch1:
-            Fetch1:
-                if (!(*data & (1 << i))) {
-                    state = fetch0;
-                } else {
-                    break;
-                }
-            case fetch0:
-                if (*data & (1 << i)) {
-                    state = fill;
-                } else {
-                    filler |= (1 << i);
-                    break;
-                }
-            case fill:
-                state = fetch1;
-                *data |= filler;
-                goto Fetch1;
-                break;
-            default:
-                // Do nothing
-                break;
-        }
-    }
-}
 /* USER CODE END Application */
 
