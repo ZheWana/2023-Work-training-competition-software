@@ -86,10 +86,10 @@ uint8_t set(int argc, char *argv[]) {
                 CarInfo.mpPid[4].ctr.aim = (float) atof(argv[i + 1]);
                 printf("mpPid[4].ctr.aim is set to %f\r\n", (float) atof(argv[i + 1]));
             } else if (!strcasecmp("clip", argv[i])) {
-                ClipRotition((float) atof(argv[i + 1]),5000);
+                ClipRotition((float) atof(argv[i + 1]), 5000);
                 printf("Clip is set to %f\r\n", (float) atof(argv[i + 1]));
             } else if (!strcasecmp("support", argv[i])) {
-                SupportRotation((float) atof(argv[i + 1]),5000);
+                SupportRotation((float) atof(argv[i + 1]), 5000);
                 printf("Support is set to %f\r\n", (float) atof(argv[i + 1]));
             }
         }
