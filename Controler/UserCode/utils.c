@@ -44,73 +44,174 @@ static void __RunMainState(void) {
         case mStart:// 升降电机、机械臂初始化
             // TODO:
             //  升降电机初始化
+
             //  机械臂方向初始化
+            Pi_ResetFromOS();
+            SupportRotationForOS(180, 700);
 
             // 初始化接收DMA
             memset(UARTRxBuffer.u16, 0, sizeof(int16_t) * 4);
             HAL_UART_Receive_DMA(&huart4, (uint8_t *) UARTRxBuffer.u16, sizeof(uint16_t) * 4);
 
             // 等待树莓派初始化完成
+            printf("Waiting for Pi Ready\r\n");
             while (HAL_GPIO_ReadPin(Pi_Ready_GPIO_Port, Pi_Ready_Pin) != 1);
+            printf("Pi is Ready\r\n");
 
             CarInfo.mainState = mScan;
             break;
         case mScan:// 扫描二维码,树莓派记录信息
 
             // 出库,到达定点后旋转车身并发出Switch信号
+            printf("MoveTo(2, 1.5f);\r\n");
             MoveTo(2, 1.5f);
+            printf("TurnTo(ToRad(180));\r\n");
             TurnTo(ToRad(180));
+            osDelay(3000);
             Pi_SwitchFromOS();
 
             // 等待树莓派扫码完成
-            while (PI_uX != 0xFFFF || PI_uY != 0xFFFF);
+            printf("Waiting for Pi Ready\r\n");
+            while (PI_uX != 0x5555 || PI_uY != 0xAAAA);
+            osDelay(100);
+            CarInfo.PiReceiveFlag = 0;
+            printf("Pi is Ready\r\n");
 
             CarInfo.mainState = mFetch;
             break;
         case mFetch:
             //  移动车身位置 进行十字校准
-            MoveTo(5.5f, 1.5f);
+            MoveTo(5.5f, 1.25f);
             Pi_SwitchFromOS();
+            // 校准
+            while (1) {
+                if (CarInfo.PiReceiveFlag == 1 && abs(PI_X) <= PIMaxError && abs(PI_Y) <= PIMaxError) {
+                    CarInfo.PiReceiveFlag = 0;
+                    printf("Calculate Over!\r\n");
+                    Pi_SwitchFromOS();
+                    break;
+                }
 
+                if (CarInfo.PiReceiveFlag == 1) {
+                    CarInfo.PiReceiveFlag = 0;
+                    CarInfo.curX += PI_X * 0.1f;
+                    CarInfo.curY -= PI_Y * 0.1f;
+                    printf("CarInfo.curXY += PI_XY;\r\n");
+                }
+            }
+
+            CarInfo.PiReceiveFlag = 0;
             for (int i = 0;; i++) {
                 // 移动到抓取物块准备位置
                 MoveTo(5.5f, 0.5f);
+                osDelay(5000);
 
                 // 抓取物块
+                if (CarInfo.PiReceiveFlag == 1 && PI_uX == 0xFFFF && PI_uY == 0xFFFF) {
+                    CarInfo.PiReceiveFlag = 0;
+                    printf("goto EndFetchLoop;\r\n");
+                    goto EndFetchLoop;
+                }
                 Pi_SwitchFromOS();
-                osDelay(100);
                 while (1) {
-                    if (PI_uX == 0xFFFF && PI_uY == 0xFFFF)goto ENDLoop;
-                    CarInfo.cpPidX.ctr.aim += PI_X;
-                    CarInfo.cpPidY.ctr.aim += PI_Y;
+                    if (CarInfo.PiReceiveFlag == 1) {
+                        CarInfo.PiReceiveFlag = 0;
+                        CarInfo.cpPidX.ctr.aim -= PI_X * 0.1f;
+                        CarInfo.cpPidY.ctr.aim += PI_Y * 0.1f;
+                        printf("CarInfo.aimXY += PI_XY;\r\n");
+                    }
 
                     // 误差满足要求则关闭地图闭环，抓取物块
-                    if (abs(PI_X) <= PIMaxError && abs(PI_Y) <= PIMaxError) {
+                    if (CarInfo.PiReceiveFlag == 1 && abs(PI_X) <= PIMaxError && abs(PI_Y) <= PIMaxError) {
+                        CarInfo.PiReceiveFlag = 0;
                         CarPositionLoopSet(0);
                         Pi_SwitchFromOS();
                         // TODO:
                         //  阻塞抓取物块
+                        printf("Fetching......\r\n");
+                        osDelay(3000);
                         printf("Fetch one thing\r\n");
 
                         CarPositionLoopSet(1);
                         break;
                     }
                 }
-                ENDLoop:;
             }
+        EndFetchLoop:;
 
             CarInfo.mainState = mDrop;
             break;
         case mDrop:// 放下物块
-            MoveTo(5.5f, 3.5f);
+            // 移动车身位置，进行十字校准
+            MoveTo(5.75f, 3.5f);
+            TurnTo(ToRad(270));
+            Pi_SwitchFromOS();
+            // 校准
+            while (1) {
+                if (CarInfo.PiReceiveFlag == 1 && abs(PI_X) <= PIMaxError && abs(PI_Y) <= PIMaxError) {
+                    CarInfo.PiReceiveFlag = 0;
+                    printf("Calculate Over!\r\n");
+                    Pi_SwitchFromOS();
+                    break;
+                }
 
+                if (CarInfo.PiReceiveFlag == 1) {
+                    CarInfo.PiReceiveFlag = 0;
+                    CarInfo.curX += PI_Y * 0.1f;
+                    CarInfo.curY += PI_X * 0.1f;
+                    printf("CarInfo.curXY += PI_XY;\r\n");
+                }
+            }
+
+
+            CarInfo.PiReceiveFlag = 0;
+            for (int i = 0;; i++) {
+                // 移动到抓取物块准备位置
+                MoveTo(6.5f, 3.5f);
+                osDelay(5000);
+
+                // 放下物块
+                if (CarInfo.PiReceiveFlag == 1 && PI_uX == 0xFFFF && PI_uY == 0xFFFF) {
+                    CarInfo.PiReceiveFlag = 0;
+                    printf("goto EndDropLoop;\r\n");
+                    goto EndDropLoop;
+                }
+
+                Pi_SwitchFromOS();
+                while (1) {
+
+                    if (CarInfo.PiReceiveFlag == 1) {
+                        CarInfo.PiReceiveFlag = 0;
+                        CarInfo.cpPidX.ctr.aim -= PI_Y * 0.1f;
+                        CarInfo.cpPidY.ctr.aim -= PI_X * 0.1f;
+                        printf("CarInfo.aimXY += PI_XY;\r\n");
+                    }
+
+                    // 误差满足要求则关闭地图闭环，抓取物块
+                    if (CarInfo.PiReceiveFlag == 1 && abs(PI_X) <= PIMaxError && abs(PI_Y) <= PIMaxError) {
+                        CarInfo.PiReceiveFlag = 0;
+                        CarPositionLoopSet(0);
+                        Pi_SwitchFromOS();
+                        // TODO:
+                        //  阻塞抓取物块
+                        printf("Droping......\r\n");
+                        osDelay(3000);
+                        printf("Drop one thing\r\n");
+
+                        CarPositionLoopSet(1);
+                        break;
+                    }
+                }
+            }
+        EndDropLoop:;
 
             CarInfo.mainState = mEnd;
             break;
         case mEnd:
-            // TODO:
             //  前往终点
+            MoveTo(0, 7);
             //  收起机械臂
+            SupportRotationForOS(90, 500);
             break;
     }
 
@@ -195,36 +296,46 @@ void MoveTo(float X, float Y) {
     CarInfo.cpPidY.ctr.aim = Y * PMW_Y_Grid;
     CarInfo.cpPidX.ctr.aim = X * PMW_X_Grid;
 
-    while (1)if (IsCarStatic)return;
+    while (!Data_RoughlyEqual(CarInfo.curY, CarInfo.curX, CarInfo.cpPidY.ctr.aim, CarInfo.cpPidX.ctr.aim, 5))
+        printf("cX = %f,cY = %f\r\n", CarInfo.curX, CarInfo.curY);
+//    while (1)if (IsCarStatic)return;
+//    osDelay(4000);
 }
 
 void TurnTo(float rad) {
     CarInfo.aPid.ctr.aim = rad;
 
-    while (1)if (IsCarStatic)return;
+//    while (1)if (IsCarStatic)return;
+//    osDelay(4000);
 }
 
 void Pi_SwitchFromOS(void) {
+    __disable_irq();
     HAL_GPIO_WritePin(Pi_Switch_GPIO_Port, Pi_Switch_Pin, GPIO_PIN_SET);
-    osDelay(100);
+    osDelay(5);
     HAL_GPIO_WritePin(Pi_Switch_GPIO_Port, Pi_Switch_Pin, GPIO_PIN_RESET);
+    printf("Pi_Switch\r\n");
+    __enable_irq();
 }
 
 void Pi_SwitchFromHAL(void) {
     HAL_GPIO_WritePin(Pi_Switch_GPIO_Port, Pi_Switch_Pin, GPIO_PIN_SET);
-    HAL_Delay(100);
+    HAL_Delay(5);
     HAL_GPIO_WritePin(Pi_Switch_GPIO_Port, Pi_Switch_Pin, GPIO_PIN_RESET);
 }
 
 void Pi_ResetFromOS(void) {
+    __disable_irq();
     HAL_GPIO_WritePin(Pi_Reset_GPIO_Port, Pi_Reset_Pin, GPIO_PIN_SET);
-    osDelay(100);
+    osDelay(5);
     HAL_GPIO_WritePin(Pi_Reset_GPIO_Port, Pi_Reset_Pin, GPIO_PIN_RESET);
+    printf("Pi_Reset\r\n");
+    __enable_irq();
 }
 
 void Pi_ResetFromHAL(void) {
     HAL_GPIO_WritePin(Pi_Reset_GPIO_Port, Pi_Reset_Pin, GPIO_PIN_SET);
-    HAL_Delay(100);
+    HAL_Delay(5);
     HAL_GPIO_WritePin(Pi_Reset_GPIO_Port, Pi_Reset_Pin, GPIO_PIN_RESET);
 }
 
@@ -255,6 +366,12 @@ void Data_ReFormatData(uint16_t *array, int len) {
     }
 }
 
+uint8_t Data_RoughlyEqual(double curY, double curX, double aimY, double aimX, double thre) {
+    if ((aimY - curY) * (aimY - curY) + (aimX - curX) * (aimX - curX) < thre * thre)
+        return 1;
+    return 0;
+}
+
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
     if (huart->Instance == UART5) {// shell用串口
         SPC_GetChar(chBuff);
@@ -265,6 +382,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
         //  帧头      数据X      数据Y       帧尾
         // 0x5555    int16     int16      0xAAAA
         Data_ReFormatData(UARTRxBuffer.u16, 4);
+        CarInfo.PiReceiveFlag = 1;
+        printf("X = %d,Y = %d\r\n", UARTRxBuffer.i16[1], UARTRxBuffer.i16[2]);
     }
 }
 
