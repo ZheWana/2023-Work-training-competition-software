@@ -67,6 +67,8 @@ void msgLog(const char *format, ...);
 #define DirStep_GPIO_Port GPIOB
 #define Dir4_Pin GPIO_PIN_7
 #define Dir4_GPIO_Port GPIOE
+#define ClipLimit_Pin GPIO_PIN_9
+#define ClipLimit_GPIO_Port GPIOE
 #define ST7735_BL_Pin GPIO_PIN_10
 #define ST7735_BL_GPIO_Port GPIOE
 #define ST7735_CS_Pin GPIO_PIN_11
