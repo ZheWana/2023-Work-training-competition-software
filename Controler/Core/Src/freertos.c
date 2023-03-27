@@ -304,7 +304,9 @@ void ScreenRefreshEntry(void *argument) {
     for (;;) {
         char buff[64];
         static uint32_t pretick = 0;
+        static float psiX = 0, psiY = 0;
         float fps = 1000.0f / (HAL_GetTick() - pretick);
+
         pretick = HAL_GetTick();
         sprintf(buff, "FPS:%.3f\n", fps);
         LCD_StringLayout(128, buff, Font_7x10, ST7735_BLACK, ST7735_WHITE);
@@ -312,9 +314,17 @@ void ScreenRefreshEntry(void *argument) {
         sprintf(buff, CarInfo.yaw > 0 ? "Yaw: %.3f\n" : "Yaw:%.3f\n", ToDig(CarInfo.yaw));
         LCD_StringLayout(128, buff, Font_11x18, ST7735_BLACK, ST7735_WHITE);
 
-        sprintf(buff, "X:%.3f\n", CarInfo.curX);
+        sprintf(buff, "pmwX:%.3f\n", CarInfo.curX);
         LCD_StringLayout(128, buff, Font_11x18, ST7735_BLACK, ST7735_WHITE);
-        sprintf(buff, "Y:%.3f\n", CarInfo.curY);
+        sprintf(buff, "pmwY:%.3f\n", CarInfo.curY);
+        LCD_StringLayout(128, buff, Font_11x18, ST7735_BLACK, ST7735_WHITE);
+
+
+        psiX += CarInfo.spdX;
+        psiY += CarInfo.spdY;
+        sprintf(buff, "psiX:%.3f\n", psiX);
+        LCD_StringLayout(128, buff, Font_11x18, ST7735_BLACK, ST7735_WHITE);
+        sprintf(buff, "psiY:%.3f\n", psiY);
         LCD_StringLayout(128, buff, Font_11x18, ST7735_BLACK, ST7735_WHITE);
 
         // End of page
@@ -341,8 +351,6 @@ void SensorHandleEntry(void *argument) {
             sOptical,
         } SensorType;
         static MovingFilter_t gyroFilter = {0};
-        static float yawPre = 0;
-        static float prehYaw, hYaw, rYaw;
 
         osMessageQueueGet(SensorMessageQueueHandle, &SensorType, 0, osWaitForever);
 
@@ -352,23 +360,7 @@ void SensorHandleEntry(void *argument) {
                 QMC5883_GetData(&CarInfo.hmc);
                 VecRotate(CarInfo.hmc.Mx, CarInfo.hmc.My, CarInfo.initYawOffset);
 
-                prehYaw = hYaw;
-                // 磁力计溢出处�??
-                hYaw = atan2f(CarInfo.hmc.Mx, CarInfo.hmc.My);
-
-                if (hYaw - prehYaw > M_PI) { // 拓展航向角坐标系
-                    CarInfo.yawOverFlowTime--;
-                } else if (prehYaw - hYaw > M_PI) {
-                    CarInfo.yawOverFlowTime++;
-                }
-
-//                rYaw = CarInfo.gyroConfi * (rYaw + ToRad(CarInfo.icm.gz) * 0.001f)
-//                       + (1 - CarInfo.gyroConfi) * atan2f(CarInfo.hmc.Mx, CarInfo.hmc.My);
-//                rYaw = atan2f(CarInfo.hmc.Mx, CarInfo.hmc.My);
-
-//                CarInfo.yaw = (float) (rYaw + (float) CarInfo.yawOverFlowTime * 2 * M_PI);
-
-                // �??螺仪积分角度
+                // Gyro integration to obtain angle
                 CarInfo.yaw += ToRad(CarInfo.icm.gz) * 1.2f * 0.001f;
 
                 taskEXIT_CRITICAL();
@@ -385,8 +377,10 @@ void SensorHandleEntry(void *argument) {
                 CarInfo.dx = (float) -CarInfo.pmw.deltaX;
                 CarInfo.dy = (float) -CarInfo.pmw.deltaY;
                 VecRotate(CarInfo.dx, CarInfo.dy, CarInfo.yaw);
-                CarInfo.curX += CarInfo.dx;
-                CarInfo.curY += CarInfo.dy;
+                CarInfo.curX += CarInfo.dx * CarInfo.opticalConfi
+                                + (1 - CarInfo.opticalConfi) * ToPMWSystem(CarInfo.spdX) * 0.01f;
+                CarInfo.curY += CarInfo.dy * CarInfo.opticalConfi
+                                + (1 - CarInfo.opticalConfi) * ToPMWSystem(CarInfo.spdY) * 0.01f;
                 taskEXIT_CRITICAL();
                 break;
             default:

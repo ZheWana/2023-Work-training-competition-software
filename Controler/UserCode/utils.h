@@ -19,6 +19,8 @@
 #define ToDig(rad) (rad * 57.295779513082320876798154814105f)
 #define ToRad(dig) (dig * 0.01745329251994329576923690768489f)
 
+#define ToPMWSystem(psi) (psi * 0.0f)
+
 #define PMW_X_Grid (550)
 #define PMW_Y_Grid (550)
 
@@ -82,6 +84,7 @@ typedef struct CarControlBlock {
     float yaw;// 弧度制
     int16_t yawOverFlowTime;
     float gyroConfi;
+    float opticalConfi;
     float initYawOffset;
     float initGxOffset;
     float initGyOffset;

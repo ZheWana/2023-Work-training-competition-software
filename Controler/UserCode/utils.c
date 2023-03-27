@@ -247,6 +247,7 @@ static void __RunMainState(void) {
 
 CCB_Typedef CarInfo = {
         .gyroConfi = 0.8f,
+        .opticalConfi = 1.0f,
         .mPsiCtr = 0,
         .cPsiCtr = 1,
         .spdLimit = {20, 20, 20, 20, 5},
