@@ -190,16 +190,26 @@ int main(void) {
         QMC5883_GetData(&CarInfo.hmc);
         ICM42605_GetData(&CarInfo.icm, ICM_MODE_GYRO);
         CarInfo.initYawOffset += atan2f(CarInfo.hmc.Mx, CarInfo.hmc.My);
-        CarInfo.initGxOffset += CarInfo.icm.gx;
-        CarInfo.initGyOffset += CarInfo.icm.gy;
-        CarInfo.initGzOffset += CarInfo.icm.gz;
         printf("gyro:%f,%f,%f\r\n", CarInfo.icm.gx, CarInfo.icm.gy, CarInfo.icm.gz);
         HAL_Delay(1);
     }
     CarInfo.initYawOffset /= 100;
-    CarInfo.initGxOffset /= 100;
-    CarInfo.initGyOffset /= 100;
-    CarInfo.initGzOffset /= 100;
+
+
+    sprintf(buffer, "Caling ICM...\r\n");
+    LCD_StringLayout(128, buffer, Font_11x18, ST7735_BLACK, ST7735_WHITE);
+    CarInfo.initGxOffset = 0;
+    CarInfo.initGyOffset = 0;
+    CarInfo.initGzOffset = 0;
+    for(int i = 0;i < 1000;i++){
+        ICM42605_GetData(&CarInfo.icm, ICM_MODE_GYRO);
+        CarInfo.initGxOffset += CarInfo.icm.gx;
+        CarInfo.initGyOffset += CarInfo.icm.gy;
+        CarInfo.initGzOffset += CarInfo.icm.gz;
+    }
+    CarInfo.initGxOffset /= 1000;
+    CarInfo.initGyOffset /= 1000;
+    CarInfo.initGzOffset /= 1000;
 
     if ((res = ICM42605_Init()) != 0) {
         char buff[64];
@@ -440,6 +450,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 
                 MapSpeedSet(CarInfo.spdY, CarInfo.spdX);
             }
+
+            CarInfo.psiX+= CarInfo.spdX*0.01f;
+            CarInfo.psiY+= CarInfo.spdY*0.01f;
 
             // Attitude PID
             CarInfo.avPid.ctr.aim = PID_Realize(&CarInfo.aPid, CarInfo.yaw);

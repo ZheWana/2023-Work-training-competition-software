@@ -19,9 +19,9 @@
 #define ToDig(rad) (rad * 57.295779513082320876798154814105f)
 #define ToRad(dig) (dig * 0.01745329251994329576923690768489f)
 
-#define ToPMWSystem(psi) (psi * 0.0f)
+#define ToPMWSystem(psi) (psi * 50.0f)
 
-#define PMW_X_Grid (550)
+#define PMW_X_Grid (600)
 #define PMW_Y_Grid (550)
 
 #define TopHeight       (50)
@@ -72,6 +72,7 @@ typedef struct CarControlBlock {
     volatile float curX, curY;
     Pid_t cpPidX, cpPidY;// Car position pid
     float spdX, spdY;
+    float psiX, psiY;
     volatile bool cPsiCtr: 1;
     bool SerialOutputEnable: 1;
     bool Pi_Reset: 1;
