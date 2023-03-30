@@ -319,12 +319,9 @@ void ScreenRefreshEntry(void *argument) {
         sprintf(buff, "pmwY:%.3f\n", CarInfo.curY);
         LCD_StringLayout(128, buff, Font_11x18, ST7735_BLACK, ST7735_WHITE);
 
-
-        psiX += CarInfo.spdX;
-        psiY += CarInfo.spdY;
-        sprintf(buff, "psiX:%.3f\n", psiX);
+        sprintf(buff, "psiX:%.3f\n", CarInfo.psiX);
         LCD_StringLayout(128, buff, Font_11x18, ST7735_BLACK, ST7735_WHITE);
-        sprintf(buff, "psiY:%.3f\n", psiY);
+        sprintf(buff, "psiY:%.3f\n", CarInfo.psiY);
         LCD_StringLayout(128, buff, Font_11x18, ST7735_BLACK, ST7735_WHITE);
 
         // End of page
@@ -368,7 +365,7 @@ void SensorHandleEntry(void *argument) {
             case sGyro:
                 taskENTER_CRITICAL();
                 ICM42605_GetData(&CarInfo.icm, ICM_MODE_ACC | ICM_MODE_GYRO);
-                CarInfo.icm.gz = Filter_MovingAvgf(&gyroFilter, CarInfo.icm.gz) + 0.16431f;
+                CarInfo.icm.gz = Filter_MovingAvgf(&gyroFilter, CarInfo.icm.gz)  - CarInfo.initGzOffset;
                 taskEXIT_CRITICAL();
                 break;
             case sOptical:
