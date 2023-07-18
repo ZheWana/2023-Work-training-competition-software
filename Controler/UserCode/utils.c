@@ -37,6 +37,14 @@ union UARTRxBuffer {
 
 int PIMaxError = 3;
 
+#define CloseMapPID()              \
+do{PID_Init(&CarInfo.cpPidX, 0, 0, 0);\
+PID_Init(&CarInfo.cpPidY, 0, 0, 0);}while(0)
+
+#define OpenMapPID()              \
+do{PID_Init(&CarInfo.cpPidX, 0.1f, 0, 0);\
+PID_Init(&CarInfo.cpPidY, 0.1f, 0, 0);}while(0)
+
 static void __RunMainState(void) {
 
     switch (CarInfo.mainState) {
@@ -64,7 +72,7 @@ static void __RunMainState(void) {
 
             // 出库,到达定点后旋转车身并发出Switch信号
             printf("MoveTo(2, 1.5f);\r\n");
-            MoveTo(2, 1.5f);
+            MoveTo(2, 1.25f);
             printf("TurnTo(ToRad(180));\r\n");
             TurnTo(ToRad(180));
             osDelay(3000);
@@ -81,7 +89,7 @@ static void __RunMainState(void) {
             break;
         case mFetch:
             //  移动车身位置 进行十字校准
-            MoveTo(5.5f, 1.25f);
+            MoveTo(5.25f, 1.25f);
             Pi_SwitchFromOS();
             // 校准
             while (1) {
@@ -104,6 +112,7 @@ static void __RunMainState(void) {
             for (int i = 0;; i++) {
                 // 移动到抓取物块准备位置
                 MoveTo(5.5f, 0.5f);
+                SupportRotationForOS(180, 500);
                 osDelay(5000);
 
                 // 抓取物块
@@ -116,6 +125,7 @@ static void __RunMainState(void) {
                 while (1) {
                     if (CarInfo.PiReceiveFlag == 1) {
                         CarInfo.PiReceiveFlag = 0;
+                        // 使用PMW移动
                         CarInfo.cpPidX.ctr.aim -= PI_X * 0.1f;
                         CarInfo.cpPidY.ctr.aim += PI_Y * 0.1f;
                         printf("CarInfo.aimXY += PI_XY;\r\n");
@@ -124,15 +134,23 @@ static void __RunMainState(void) {
                     // 误差满足要求则关闭地图闭环，抓取物块
                     if (CarInfo.PiReceiveFlag == 1 && abs(PI_X) <= PIMaxError && abs(PI_Y) <= PIMaxError) {
                         CarInfo.PiReceiveFlag = 0;
-                        CarPositionLoopSet(0);
+                        CloseMapPID();
                         Pi_SwitchFromOS();
-                        // TODO:
                         //  阻塞抓取物块
                         printf("Fetching......\r\n");
-                        osDelay(3000);
+                        SupportRotationForOS(0, 500);
+                        ClipRotition(CLIP_OPEN, 300);
+                        ClipMoveTo(Ground_Height);
+                        ClipRotition(CLIP_CLOSE, 300);
+                        ClipMoveTo(TopHeight);
+                        if (i == 0) SupportRotationForOS(FirstDigree, 500);
+                        else if (i == 1)SupportRotationForOS(SecondDigree, 500);
+                        else if (i == 2)SupportRotationForOS(ThirdDigree, 500);
+                        ClipMoveTo(Store_Height);
+                        ClipRotition(CLIP_OPEN, 300);
+                        ClipMoveTo(TopHeight);
                         printf("Fetch one thing\r\n");
-
-                        CarPositionLoopSet(1);
+                        OpenMapPID();
                         break;
                     }
                 }
@@ -168,6 +186,7 @@ static void __RunMainState(void) {
             for (int i = 0;; i++) {
                 // 移动到抓取物块准备位置
                 MoveTo(6.5f, 3.5f);
+                SupportRotationForOS(180, 500);
                 osDelay(5000);
 
                 // 放下物块
@@ -190,15 +209,23 @@ static void __RunMainState(void) {
                     // 误差满足要求则关闭地图闭环，抓取物块
                     if (CarInfo.PiReceiveFlag == 1 && abs(PI_X) <= PIMaxError && abs(PI_Y) <= PIMaxError) {
                         CarInfo.PiReceiveFlag = 0;
-                        CarPositionLoopSet(0);
+                        CloseMapPID();
                         Pi_SwitchFromOS();
-                        // TODO:
                         //  阻塞抓取物块
                         printf("Droping......\r\n");
-                        osDelay(3000);
+                        if (i == 0) SupportRotationForOS(ThirdDigree, 500);
+                        else if (i == 1)SupportRotationForOS(SecondDigree, 500);
+                        else if (i == 2)SupportRotationForOS(FirstDigree, 500);
+                        ClipRotition(CLIP_OPEN, 300);
+                        ClipMoveTo(Store_Height);
+                        ClipRotition(CLIP_CLOSE, 300);
+                        ClipMoveTo(TopHeight);
+                        SupportRotationForOS(0, 500);
+                        ClipMoveTo(Ground_Height);
+                        ClipRotition(CLIP_OPEN, 300);
+                        ClipMoveTo(TopHeight);
                         printf("Drop one thing\r\n");
-
-                        CarPositionLoopSet(1);
+                        OpenMapPID();
                         break;
                     }
                 }
@@ -220,9 +247,10 @@ static void __RunMainState(void) {
 
 CCB_Typedef CarInfo = {
         .gyroConfi = 0.8f,
+        .opticalConfi = 1.0f,
         .mPsiCtr = 0,
         .cPsiCtr = 1,
-        .spdLimit = {20, 20, 20, 20, 10},
+        .spdLimit = {20, 20, 20, 20, 5},
         .mainState = mStart,
         .SerialOutputEnable = 0,
         .RunMainState = __RunMainState,
@@ -262,7 +290,8 @@ void LCD_StringLayout(uint16_t maxY, char *buff, FontDef font, uint16_t color, u
  * @param position 旋转位置（0-1000）
  * @param time 旋转所需时间(单位:ms)
  */
-void SupportRotation(float position, uint32_t time) {
+void SupportRotation(float dig, uint32_t time) {
+    int16_t position = (int16_t) (dig * 77.0f / 18 + 10);
     LobotSerialServoMove(SupportServoID, (int16_t) position, time);
 }
 
@@ -300,6 +329,11 @@ void MoveTo(float X, float Y) {
         printf("cX = %f,cY = %f\r\n", CarInfo.curX, CarInfo.curY);
 //    while (1)if (IsCarStatic)return;
 //    osDelay(4000);
+}
+
+void ClipMoveTo(int height) {
+    CarInfo.mpPid[4].ctr.aim = (float) height;
+    while (fabsf(CarInfo.psi[4] - CarInfo.mpPid[4].ctr.aim) >= 3);
 }
 
 void TurnTo(float rad) {

@@ -19,11 +19,21 @@
 #define ToDig(rad) (rad * 57.295779513082320876798154814105f)
 #define ToRad(dig) (dig * 0.01745329251994329576923690768489f)
 
-#define PMW_X_Grid (800)
-#define PMW_Y_Grid (800)
+#define ToPMWSystem(psi) (psi * 50.0f)
+
+#define PMW_X_Grid (600)
+#define PMW_Y_Grid (550)
+
+#define TopHeight       (50)
+#define Ground_Height   (2100)
+#define Store_Height    (550)
+
+#define FirstDigree     (217)
+#define SecondDigree    (182)
+#define ThirdDigree     (147)
 
 #define CLIP_CLOSE (1000)
-#define CLIP_OPEN  (900)
+#define CLIP_OPEN  (880)
 
 #define IsCarStatic (!CarInfo.isCarMoving)
 
@@ -62,7 +72,8 @@ typedef struct CarControlBlock {
     volatile float curX, curY;
     Pid_t cpPidX, cpPidY;// Car position pid
     float spdX, spdY;
-    bool cPsiCtr: 1;
+    float psiX, psiY;
+    volatile bool cPsiCtr: 1;
     bool SerialOutputEnable: 1;
     bool Pi_Reset: 1;
     bool Start_State: 1;
@@ -74,6 +85,7 @@ typedef struct CarControlBlock {
     float yaw;// 弧度制
     int16_t yawOverFlowTime;
     float gyroConfi;
+    float opticalConfi;
     float initYawOffset;
     float initGxOffset;
     float initGyOffset;
@@ -101,13 +113,15 @@ extern Shell shell;
 
 void LCD_StringLayout(uint16_t maxY, char *buff, FontDef font, uint16_t color, uint16_t bgcolor);
 
-void SupportRotation(float position, uint32_t time);
+void SupportRotation(float dig, uint32_t time);
 
 void SupportRotationForOS(float dig, uint32_t time);
 
 void ClipRotition(float position, uint32_t time);
 
 void MoveTo(float X, float Y);
+
+void ClipMoveTo(int height);
 
 void TurnTo(float rad);
 
