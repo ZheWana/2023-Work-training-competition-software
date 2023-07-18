@@ -1,0 +1,14 @@
+{
+    "files.exclude": {
+        "**/*.[!cdhjmp]*": true
+    },
+    "C_Cpp.default.compilerPath": "c://Program Files//LLVM//bin//clang.exe",
+    "C_Cpp.default.includePath": [
+        "${workspaceFolder}/**",
+        "C:/Program Files/LLVM/lib/clang/16/include"
+    ],
+    "C_Cpp.codeAnalysis.clangTidy.checks.disabled": [
+        "clang-analyzer-*"
+    ],
+    "C_Cpp.errorSquiggles": "disabled"
+}
