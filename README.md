@@ -30,4 +30,4 @@ STM32H750VBT6为核心的控制器；
 
 #### Controler架构大致如下：
 
-![架构图](./structure.png)
+![架构图](./Controler/structure.png)
