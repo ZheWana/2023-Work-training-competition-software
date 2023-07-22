@@ -9,10 +9,10 @@
 工训赛的工程其实是笔者写的相对比较认真的工程，有些地方略显青涩，但是值得一说（吧？）。再加上笔者自己也恰好有需要分析这个项目的需求，遂写了这篇文章。
 
 > 老油条须知：本文不是为老油条准备的，看着玩就行，不足之处轻喷，谢谢：）
-> 
+>
 > 另：本文中会对部分概念进行简单解释，均在引用块中进行。
 
-***
+---
 
 副标题其实是笔者后续添加的（尽管没体现在更新记录中），因为总结完整个代码之后发现其实整个工程还是比较小，为了能多水些字数所以打算加一点简单的概念解释进去。
 
@@ -65,9 +65,9 @@
 尽管实际上整车的状态流程就是一个简单的线性流程，完全可以直接在函数中直接执行，但是笔者还是使用了状态机来进行组织，以应付后续可能会出现的更加复杂的需求。
 
 > 状态机是一种简单的程序实现方式，在近几年自控的赛题中十分常见。通常用状态和状态转移来描述一个状态机。而最常见且简单的状态机实现方式其实就是使用switch语句，将状态和状态转移条件以及行为都包含在分支内。
-> 
+>
 > 对于状态的定义，笔者建议使用枚举的方式，因为使用宏定义的方式让本互相之间有关联的状态变得互不相干（说白了就是笔者不喜欢😑
-> 
+>
 > PS：尽管大家似乎都不屑于进行状态机编程，但是这并不影响状态机是一个良好的方法。
 
 该状态机运行在由FreeRTOS所调度的一个任务中 `void StateMachineEntry(void *argument)----freertos.c:281`：
@@ -92,14 +92,14 @@ void StateMachineEntry(void *argument) {
 
 LetterShell中只实现了调试用得到的6个指令：
 
-| 指令                                                   | 功能             |
-|:----------------------------------------------------:|:--------------:|
-| set <paraname paravalue> ...                         | 设置paraname参数的值 |
-| motormove <axis-y-value> <axis-y-value> <speedlimit> | 基于车体坐标系进行移动    |
-| mapmove <axis-y-value> <axis-y-value> <speedlimit>   | 基于世界坐标系进行移动    |
-| rota <dig>                                           | 旋转车身           |
-| ed                                                   | 关闭串口数据输出       |
-| op                                                   | 打开串口数据输出       |
+|                               指令                               |          功能          |
+| :---------------------------------------------------------------: | :--------------------: |
+|                 set`<paraname paravalue>` ...                 |  设置paraname参数的值  |
+| motormove`<axis-y-value>` `<axis-y-value>` `<speedlimit>` | 基于车体坐标系进行移动 |
+|  mapmove`<axis-y-value>` `<axis-y-value>` `<speedlimit>`  | 基于世界坐标系进行移动 |
+|                           rota`<dig>`                           |        旋转车身        |
+|                                ed                                |    关闭串口数据输出    |
+|                                op                                |    打开串口数据输出    |
 
 #### 接口相关代码
 
@@ -141,10 +141,10 @@ void ClipOpenForOS(void) {
 框架相关的部分主要有两个任务和一个定时器中断，其中一个屏幕刷新任务我们可以忽略，那么剩下来的两部分本质上就是由一个中断和一个循环所组成的**前后台架构**。
 
 > 前后台架构是在嵌入式软件开发过程中十分常见于裸机开发中的一种架构，通常由一个定时器中断和一个主循环构成。
-> 
+>
 > 使用这种架构的初衷是：**避免在中断中处理过于繁杂的任务进而导致中断衔尾**，于是便把需要处理的任务搬到主循环中处理。实际使用中往往会为在主循环中的轮询的代码设置一个标志位，在中断中把标志位置位，接着在主循环中清除该标志位并执行需要执行的任务（没错，就是仿照实际中断的运行方式）
 
-既然涉及到了中断那自然少不了带中断软件的设计准则：**中断中的程序应该尽量短小**，所以一切涉及IO的操作自然就要移动到阻塞不敏感的循环中。再加上使用RTOS进行代码执行，所以原来的标志位也就自然而然的改为了消息队列的实现`main.c:386`：
+既然涉及到了中断那自然少不了带中断软件的设计准则：**中断中的程序应该尽量短小**，所以一切涉及IO的操作自然就要移动到阻塞不敏感的循环中。再加上使用RTOS进行代码执行，所以原来的标志位也就自然而然的改为了消息队列的实现 `main.c:386`：
 
 ```c
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {// 1ms IRQHandler
@@ -174,7 +174,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {// 1ms IRQHandler
 }
 ```
 
-以上代码虽然是实际代码的部分截取，但是实现的功能与实际执行相同：以固定的时间间隔读取传感器采集的数据。其中消息队列与传感器采集任务通讯，一旦采集任务接收到对应传感器类型的消息就会立即开始数据采集工作`void SensorHandleEntry(void *argument) {----freertos.c:340`。
+以上代码虽然是实际代码的部分截取，但是实现的功能与实际执行相同：以固定的时间间隔读取传感器采集的数据。其中消息队列与传感器采集任务通讯，一旦采集任务接收到对应传感器类型的消息就会立即开始数据采集工作 `void SensorHandleEntry(void *argument) {----freertos.c:340`。
 
 ### 硬件接口
 
@@ -217,7 +217,7 @@ int Motor_Drive(int motorID, float duty, int dir) {
 ### RTOS与中断的权衡问题
 
 > RTOS的全称是实时操作系统，其主要实现的功能包括但不限于：多任务的竞争或合作式调度、任务间通信机制（信号量、消息队列）等。
-> 
+>
 > RTOS的核心是**调度**，我们使用到它的最大原因是：它可以通过调度的方式来让单核的MCU以一种伪并行的方式来运行多个任务。
 
 在嵌入式系统的实际使用中，尽管使用了RTOS，中断也是没法绕开的重要部分。不过在一开始接触RTOS的时候笔者一直将其**作为代替前后台架构的良好解药**，但是经过一番思考与实践之后笔者发现事情貌似并不是这样的。
@@ -238,7 +238,7 @@ RTOS的任务调度之间往往有任务优先级，而不同中断之间也是�
 
 最典型的场景就是：你需要控制一个两轮小车进行运动，包括前进后退以及转向。在分开的情况下一切都是容易的，但是当你需要一边前进一边转向的时候你就会开始懵逼了。
 
-当然，方案其实是简单的，只要把两个PID的输出线性相加到同一缓冲个变量中然后进行输出即可，如果还是不太理解的话可以读一读定时器中断中相关的代码`main.c:485`：
+当然，方案其实是简单的，只要把两个PID的输出线性相加到同一缓冲个变量中然后进行输出即可，如果还是不太理解的话可以读一读定时器中断中相关的代码 `main.c:485`：
 
 ```c
 // Merge Motor Position PID and Attitude PID output
@@ -271,14 +271,29 @@ switch (i) {
 
 转换一下问题就是：在传感器失控的时候，通过速度计算的位移和通过光流计算获得的位移的差是更大的。并且，在传感器没有是空的情况下，传感器更准，否则通过自身速度积分获得的位移更准，刚好符合互补滤波的使用条件（或许需要一些想象力：）
 
-于是笔者简单的写了一个系数变化的互补滤波，用来修复传感器的错误数据`freertos.c:378`：
+于是笔者简单的写了一个系数变化的互补滤波，用来修复传感器的错误数据 `freertos.c:378`：
 
 ```c
+// Recalculate optical confidence for each axis
+float tempDx = fabsf(CarInfo.dx),
+        tempSx = fabsf(ToPMWSystem(CarInfo.spdX)),
+        tempDy = fabsf(CarInfo.dx),
+        tempSy = fabsf(ToPMWSystem(CarInfo.spdX));
+if (MAX(tempDx, tempSx) != 0) {
+    CarInfo.opticalConfigX = MIN(tempDx, tempSx) / MAX(tempDx, tempSx);
+} else {
+    CarInfo.opticalConfigX = 1;
+}
+if (MAX(tempDy, tempSy) != 0) {
+    CarInfo.opticalConfigY = MIN(tempDy, tempSy) / MAX(tempDy, tempSy);
+} else {
+    CarInfo.opticalConfigY = 1;
+}
 // Fusing optical data and car speed data
-CarInfo.curX += CarInfo.dx * CarInfo.opticalConfi
-                + (1 - CarInfo.opticalConfi) * ToPMWSystem(CarInfo.spdX) * 0.01f;
-CarInfo.curY += CarInfo.dy * CarInfo.opticalConfi
-                + (1 - CarInfo.opticalConfi) * ToPMWSystem(CarInfo.spdY) * 0.01f;
+CarInfo.curX += CarInfo.dx * CarInfo.opticalConfigX
+                + (1 - CarInfo.opticalConfigX) * ToPMWSystem(CarInfo.spdX) * 0.01f;
+CarInfo.curY += CarInfo.dy * CarInfo.opticalConfigY
+                + (1 - CarInfo.opticalConfigY) * ToPMWSystem(CarInfo.spdY) * 0.01f;
 ```
 
 实际测试效果还好，恭喜自己。
