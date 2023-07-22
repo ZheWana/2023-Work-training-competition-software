@@ -95,8 +95,8 @@ uint8_t set(int argc, char *argv[]) {
                 CarInfo.mpPid[4].ctr.aim = CarInfo.psi[4];
                 printf("Position Stop\r\n", (float) atof(argv[i + 1]));
             } else if (!strcasecmp("oc", argv[i])) {
-                CarInfo.opticalConfi = (float) atof(argv[i + 1]);
-                printf("opticalConfi is set to %f\r\n", (float) atof(argv[i + 1]));
+                CarInfo.opticalConfigX = (float) atof(argv[i + 1]);
+                printf("opticalConfigX is set to %f\r\n", (float) atof(argv[i + 1]));
             }
         }
     }

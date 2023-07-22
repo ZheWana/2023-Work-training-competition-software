@@ -365,7 +365,7 @@ void SensorHandleEntry(void *argument) {
             case sGyro:
                 taskENTER_CRITICAL();
                 ICM42605_GetData(&CarInfo.icm, ICM_MODE_ACC | ICM_MODE_GYRO);
-                CarInfo.icm.gz = Filter_MovingAvgf(&gyroFilter, CarInfo.icm.gz)  - CarInfo.initGzOffset;
+                CarInfo.icm.gz = Filter_MovingAvgf(&gyroFilter, CarInfo.icm.gz) - CarInfo.initGzOffset;
                 taskEXIT_CRITICAL();
                 break;
             case sOptical:
@@ -375,11 +375,27 @@ void SensorHandleEntry(void *argument) {
                 CarInfo.dy = (float) -CarInfo.pmw.deltaY;
                 VecRotate(CarInfo.dx, CarInfo.dy, CarInfo.yaw);
 
+                // Recalculate optical confidence for each axis
+                float tempDx = fabsf(CarInfo.dx),
+                        tempSx = fabsf(ToPMWSystem(CarInfo.spdX)),
+                        tempDy = fabsf(CarInfo.dx),
+                        tempSy = fabsf(ToPMWSystem(CarInfo.spdX));
+                if (MAX(tempDx, tempSx) != 0) {
+                    CarInfo.opticalConfigX = MIN(tempDx, tempSx) / MAX(tempDx, tempSx);
+                } else {
+                    CarInfo.opticalConfigX = 1;
+                }
+                if (MAX(tempDy, tempSy) != 0) {
+                    CarInfo.opticalConfigY = MIN(tempDy, tempSy) / MAX(tempDy, tempSy);
+                } else {
+                    CarInfo.opticalConfigY = 1;
+                }
+
                 // Fusing optical data and car speed data
-                CarInfo.curX += CarInfo.dx * CarInfo.opticalConfi
-                                + (1 - CarInfo.opticalConfi) * ToPMWSystem(CarInfo.spdX) * 0.01f;
-                CarInfo.curY += CarInfo.dy * CarInfo.opticalConfi
-                                + (1 - CarInfo.opticalConfi) * ToPMWSystem(CarInfo.spdY) * 0.01f;
+                CarInfo.curX += CarInfo.dx * CarInfo.opticalConfigX
+                                + (1 - CarInfo.opticalConfigX) * ToPMWSystem(CarInfo.spdX) * 0.01f;
+                CarInfo.curY += CarInfo.dy * CarInfo.opticalConfigY
+                                + (1 - CarInfo.opticalConfigY) * ToPMWSystem(CarInfo.spdY) * 0.01f;
 
                 taskEXIT_CRITICAL();
                 break;

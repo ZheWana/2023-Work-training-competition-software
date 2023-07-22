@@ -37,10 +37,6 @@
 
 #define IsCarStatic (!CarInfo.isCarMoving)
 
-#define LimitFloat(input, min, max) do{ \
-    input=input<min?min:input>max?max:input; \
-}while(0)
-
 #define VecRotate(x, y, theta) do{              \
     float tx = x,ty = y;                        \
     tx = x * cosf(theta) - y * sinf(theta);     \
@@ -48,6 +44,9 @@
     x = tx;                                     \
     y = ty;                                     \
 }while(0)
+
+#define MAX(a, b) ((a)>(b)?(a):(b))
+#define MIN(a, b) ((a)>(b)?(b):(a))
 
 #ifndef M_PI
 #define M_PI 3.1415926535897932384626433832795
@@ -85,7 +84,8 @@ typedef struct CarControlBlock {
     float yaw;// 弧度制
     int16_t yawOverFlowTime;
     float gyroConfi;
-    float opticalConfi;
+    float opticalConfigX;
+    float opticalConfigY;
     float initYawOffset;
     float initGxOffset;
     float initGyOffset;
